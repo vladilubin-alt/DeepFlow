@@ -1,0 +1,88 @@
+# DeepFlow ADHD Writing Timer Constitution
+
+## Global Identity
+DeepFlow is an ADHD-focused writing timer designed to help users enter and maintain flow states. It uses deterministic behavioral psychology triggers (like the "Forgiving Guillotine" and auditory/visual ADHD flares) coupled with an Apple-esque minimalistic UI.
+
+## Behavioral Rules
+- **Apple-esque Minimalistic UI**: High aesthetic priority, clean layouts, custom typography, subtle micro-animations. Avoid typical loud or gamified "AI" tropes.
+- **ADHD-Centric Flow**: Design features must reduce cognitive friction and prevent task freeze.
+- **Shame Reduction**: Implementation of "Grace Tokens" and forgiveness mechanics to prevent users from deleting the app out of guilt when a streak is broken.
+
+## Architectural Invariants
+- **Deterministic Business Logic**: Timer state, guillotine logic, penalty calculations, and session logging must be 100% deterministic and validated on the backend.
+- **Probabilistic UI**: UI transitions, feedback loops, and decorative elements can be dynamic/probabilistic to maintain high novelty.
+
+## Security Policy (80/20 Rule)
+- **Row Level Security (RLS)**: Enforced on all tables ("User A can only see User A's data").
+- **Secret Management**: API keys and secrets strictly referenced via `.env` imports only.
+- **Server-Side Validation**: All user input, emails, and session data validated on the server/database functions.
+- **Dependency Checks**: Periodic audit of third-party packages.
+
+## Data Schemas
+
+### 1. User Profiles (`profiles`)
+Stores user-specific stats, streak counts, and available Grace Tokens.
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UserProfile",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "format": "uuid", "description": "References auth.users(id)" },
+    "username": { "type": ["string", "null"] },
+    "streak_count": { "type": "integer", "minimum": 0, "default": 0 },
+    "grace_tokens": { "type": "integer", "minimum": 0, "default": 3 },
+    "last_active_at": { "type": ["string", "null"], "format": "date-time" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["id", "streak_count", "grace_tokens", "created_at", "updated_at"]
+}
+```
+
+### 2. Writing Sessions (`writing_sessions`)
+Logs each writing session, timer metrics, and guillotine/grace token outcomes.
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "WritingSession",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "user_id": { "type": "string", "format": "uuid", "description": "References profiles(id)" },
+    "started_at": { "type": "string", "format": "date-time" },
+    "ended_at": { "type": ["string", "null"], "format": "date-time" },
+    "duration_seconds": { "type": "integer", "minimum": 0 },
+    "target_words": { "type": "integer", "minimum": 0 },
+    "words_written": { "type": "integer", "minimum": 0 },
+    "guillotine_triggered": { "type": "boolean", "default": false },
+    "grace_token_used": { "type": "boolean", "default": false },
+    "status": { 
+      "type": "string", 
+      "enum": ["active", "completed", "guillotined", "saved_by_grace"] 
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["id", "user_id", "started_at", "duration_seconds", "target_words", "words_written", "guillotine_triggered", "grace_token_used", "status"]
+}
+```
+
+### 3. Drafts (`drafts`)
+Stores primary text data to prevent catastrophic loss when crashes occur.
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Draft",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "session_id": { "type": "string", "format": "uuid", "description": "References writing_sessions(id)" },
+    "user_id": { "type": "string", "format": "uuid", "description": "References profiles(id)" },
+    "content": { "type": "string" },
+    "word_count": { "type": "integer", "minimum": 0 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["id", "session_id", "user_id", "content", "word_count", "created_at", "updated_at"]
+}
+```

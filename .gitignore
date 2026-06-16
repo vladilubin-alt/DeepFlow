@@ -1,0 +1,22 @@
+# Local environment secrets
+.env
+.env.local
+.env.*.local
+
+# Temp files and intermediates
+.tmp/
+*.log
+
+# Android build outputs and caches
+.gradle/
+build/
+local.properties
+.navigation/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.apks
+
+# OS files
+.DS_Store
