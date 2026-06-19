@@ -25,8 +25,8 @@ def verify_supabase(url, anon_key):
         print("❌ Supabase URL is not configured.")
         return False
     
-    # Postgrest OpenAPI endpoint returns schema definition including tables
-    endpoint = f"{url.rstrip('/')}/rest/v1/"
+    # Query the profiles table using the anon key to verify connectivity
+    endpoint = f"{url.rstrip('/')}/rest/v1/profiles?select=*"
     headers = {
         "apikey": anon_key,
         "Authorization": f"Bearer {anon_key}",
@@ -40,11 +40,8 @@ def verify_supabase(url, anon_key):
     try:
         with urllib.request.urlopen(req, timeout=10, context=context) as response:
             if response.status == 200:
-                data = json.loads(response.read().decode())
-                definitions = data.get("definitions", {})
-                tables = list(definitions.keys())
                 print("✅ Supabase Connection: Success (200 OK)")
-                print(f"Exposed tables: {tables}")
+                print("Exposed table 'profiles' is queryable.")
                 return True
             else:
                 print(f"❌ Supabase Connection Failed: Status {response.status}")
