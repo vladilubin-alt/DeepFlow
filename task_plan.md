@@ -32,5 +32,7 @@
 - [x] Create project structure and project memory files
 - [x] Run discovery questions and halt for user response
 - [x] Populate schemas in `gemini.mmd`
+- [x] Generate SQL schema script ([supabase_schema.sql](file:///Users/vladi/Desktop/DeepFlow/stages/02_Link/supabase_schema.sql))
 - [/] Initialize local Flutter/Dart and Python environment for development
-- [ ] Setup Supabase backend tables and RLS rules
+- [ ] Set active Supabase credentials in `.env` and verify connectivity
+- [ ] Apply SQL schema to Supabase and enable RLS
