@@ -1,7 +1,26 @@
 # Local environment secrets
 .env
 .env.local
+.env*.local
 .env.*.local
+.env.*
+*.env
+!.env.example
+
+# Credentials and secrets
+credentials.json
+token.json
+*credentials*.json
+*credential*.json
+*secret*.json
+*token*.json
+*creds*.json
+key*.json
+*key.json
+jwt*.json
+
+# Dependencies
+node_modules/
 
 # Temp files and intermediates
 .tmp/
