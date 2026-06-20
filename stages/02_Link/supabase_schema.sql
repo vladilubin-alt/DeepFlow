@@ -129,3 +129,31 @@ drop trigger if exists update_drafts_updated_at on public.drafts;
 create trigger update_drafts_updated_at
     before update on public.drafts
     for each row execute procedure public.update_updated_at_column();
+
+-- 6. Graveyard Table (Tiered Vault Backup)
+create table if not exists public.graveyard (
+    id uuid primary key default gen_random_uuid(),
+    session_id uuid references public.writing_sessions(id) on delete cascade,
+    user_id uuid references public.profiles(id) on delete cascade not null,
+    content text not null,
+    word_count integer not null default 0 constraint word_count_nonnegative check (word_count >= 0),
+    deleted_at timestamptz not null default now(),
+    created_at timestamptz not null default now()
+);
+
+-- Enable RLS for graveyard
+alter table public.graveyard enable row level security;
+
+-- Policies for graveyard
+create policy "Users can view their own graveyard"
+    on public.graveyard for select
+    using (auth.uid() = user_id);
+
+create policy "Users can insert their own graveyard"
+    on public.graveyard for insert
+    with check (auth.uid() = user_id);
+
+create policy "Users can delete their own graveyard"
+    on public.graveyard for delete
+    using (auth.uid() = user_id);
+

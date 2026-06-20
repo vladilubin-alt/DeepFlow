@@ -200,6 +200,12 @@ export class DeepFlowSession {
 
     await this.sync.saveSession(session);
 
+    // If session was guillotined, silently backup to Graveyard (Tiered Vault)
+    if (this._userId && (ctx.guillotineTriggered || session.status === 'guillotined')) {
+      const wordCount = this._countWords(this._text);
+      await this.sync.saveToGraveyard(this._sessionId, this._userId, this._text, wordCount);
+    }
+
     // Update profile last_active_at
     if (this._userId) {
       await this.sync.updateProfile(this._userId, {

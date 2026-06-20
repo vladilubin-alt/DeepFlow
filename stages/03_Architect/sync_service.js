@@ -106,6 +106,29 @@ export class SyncService {
   }
 
   /**
+   * Silently backup a guillotined or abandoned draft to the graveyard.
+   * @param {string} sessionId
+   * @param {string} userId
+   * @param {string} content
+   * @param {number} wordCount
+   */
+  async saveToGraveyard(sessionId, userId, content, wordCount) {
+    const payload = {
+      session_id: sessionId,
+      user_id: userId,
+      content,
+      word_count: wordCount,
+      deleted_at: new Date().toISOString(),
+    };
+
+    // Save locally first
+    this.storage.setItem(`graveyard:${sessionId}`, JSON.stringify(payload));
+
+    // Sync to Supabase graveyard
+    return this._upsertRemote('graveyard', payload);
+  }
+
+  /**
    * Update a user profile (e.g. decrement grace tokens).
    * @param {string} userId
    * @param {object} patch — partial profile update

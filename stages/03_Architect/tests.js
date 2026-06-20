@@ -8,6 +8,7 @@
 import { GuillotineStateMachine, STATES, EVENTS } from './state_machine.js';
 import { TimerController } from './timer_logic.js';
 import { SyncService, MemoryStorage, SYNC_STATUS } from './sync_service.js';
+import { execSync } from 'child_process';
 
 // ── Minimal test harness ─────────────────────────────────────────
 let _passed = 0;
@@ -283,6 +284,45 @@ suite('Sync Service — Multiple Drafts');
   assertEqual(d2.content, 'Draft two more words', 's2 content correct');
 
   sync.destroy();
+}
+
+// ── 15. Keystroke Validation: Python Integration ─────────────────
+suite('Smart Keystroke Validation (Python Integration)');
+
+{
+  const runValidation = (text) => {
+    const out = execSync('python3 execution/validate_keystrokes.py', {
+      input: text,
+      encoding: 'utf-8'
+    });
+    return JSON.parse(out);
+  };
+
+  // Test 1: Valid text resets warning state
+  const sm1 = new GuillotineStateMachine();
+  sm1.send(EVENTS.START);
+  sm1.send(EVENTS.IDLE_TIMEOUT);
+  assertEqual(sm1.state, STATES.WARNING, 'Machine entered warning');
+
+  const res1 = runValidation('Deep work session is starting now');
+  assertEqual(res1.valid, true, 'Valid sentence approved by python');
+  if (res1.valid) {
+    sm1.send(EVENTS.KEYSTROKE);
+  }
+  assertEqual(sm1.state, STATES.WRITING, 'KEYSTROKE sent on valid text → writing');
+
+  // Test 2: Gibberish text is rejected and does not reset warning state
+  const sm2 = new GuillotineStateMachine();
+  sm2.send(EVENTS.START);
+  sm2.send(EVENTS.IDLE_TIMEOUT);
+  assertEqual(sm2.state, STATES.WARNING, 'Machine in warning state');
+
+  const res2 = runValidation('asdfghjkl');
+  assertEqual(res2.valid, false, 'Gibberish rejected by python');
+  if (res2.valid) {
+    sm2.send(EVENTS.KEYSTROKE);
+  }
+  assertEqual(sm2.state, STATES.WARNING, 'KEYSTROKE blocked on gibberish → remains warning');
 }
 
 // ── Done ─────────────────────────────────────────────────────────
