@@ -24,6 +24,7 @@ node_modules/
 
 # Temp files and intermediates
 .tmp/
+dist/
 *.log
 
 # Android build outputs and caches
