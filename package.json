@@ -1,0 +1,15 @@
+{
+  "name": "deepflow",
+  "version": "0.1.0",
+  "description": "ADHD-focused writing timer with Forgiving Guillotine mechanics",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node stages/03_Architect/tests.js",
+    "dev": "echo 'Phase 4 (Stylize) not yet configured'",
+    "verify": "python3 execution/verify_links.py"
+  },
+  "keywords": ["adhd", "writing", "timer", "flow-state", "productivity"],
+  "author": "Vladimir Lubin",
+  "license": "UNLICENSED"
+}
