@@ -335,3 +335,16 @@
   [data-theme="light"] .grace-token-panel .gt-btn:hover:not(:disabled) { background: #FFE0E0; }
   [data-theme="light"] .stat-chip { border-right-color: #E8E3D8; }
 }
+
+@keyframes blob-morph {
+  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  20% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+  40% { border-radius: 50% 60% 30% 40% / 40% 50% 60% 50%; }
+  60% { border-radius: 70% 30% 50% 50% / 30% 70% 40% 60%; }
+  80% { border-radius: 40% 50% 60% 30% / 60% 40% 50% 70%; }
+}
+
+@keyframes blob-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.08); }
+}

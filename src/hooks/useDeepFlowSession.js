@@ -117,6 +117,7 @@ export function useDeepFlowSession() {
   }, []);
 
   const useGraceToken = useCallback(() => {
+    if (graceTokens <= 0) return false;
     if (sessionRef.current) {
       const ok = sessionRef.current.useGraceToken();
       if (ok) {
@@ -127,7 +128,7 @@ export function useDeepFlowSession() {
       return ok;
     }
     return false;
-  }, []);
+  }, [graceTokens]);
 
   const giveUp = useCallback(() => {
     if (sessionRef.current) {

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 import { GuillotineStateMachine, EVENTS, STATES } from '../logic/GuillotineStateMachine';
 import { TimerController } from '../logic/TimerController';
+import { triggerGraceTokenPaywall } from '../services/SuperwallService';
 import TopBar from '../components/TopBar';
 import TimerDisplay from '../components/TimerDisplay';
 import OrbVisualiser from '../components/OrbVisualiser';
@@ -38,10 +39,15 @@ export default function ActiveSessionScreen({ route, navigation }) {
   }, []);
 
   const useGraceToken = useCallback(() => {
-    if (machineRef.current) {
-      const ok = machineRef.current.send(EVENTS.USE_GRACE_TOKEN);
-      if (!ok) return;
-    }
+    if (!machineRef.current) return;
+    const ok = machineRef.current.send(EVENTS.USE_GRACE_TOKEN);
+    if (ok) return;
+    triggerGraceTokenPaywall(() => {
+      const tokens = 3;
+      setTimerData((prev) => ({ ...prev, graceTokens: tokens }));
+      machineRef.current.ctx.graceTokens = tokens;
+      machineRef.current.send(EVENTS.USE_GRACE_TOKEN);
+    });
   }, []);
 
   const dismissNudge = useCallback(() => setNudge(null), []);

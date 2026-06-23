@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
+import { initSuperwall } from './src/services/SuperwallService';
 
 import HomeScreen from './src/screens/HomeScreen';
 import ActiveSessionScreen from './src/screens/ActiveSessionScreen';
@@ -24,6 +25,10 @@ function TabIcon({ label, focused }) {
 }
 
 export default function App() {
+  useEffect(() => {
+    initSuperwall();
+  }, []);
+
   return (
     <SafeAreaProvider>
       <ThemeProvider>

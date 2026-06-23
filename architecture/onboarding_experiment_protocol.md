@@ -77,13 +77,19 @@ On initial launch, users are bucketed into one of three personas via a 3-questio
 - **A/B Variant B:** Teaser report (3 of 5 metrics shown) with gate: "Upgrade to see your full Focus Score breakdown."
 - **Measured metric:** Tap-through rate on upsell CTA.
 
-### Trigger 3 — Locked 4th Grace Token
-- **When:** User has 0 grace tokens remaining and attempts to use one (either via guillotine rescue or vault recovery).
-- **Action:** Superwall presents a paywall offering a 3-pack of Grace Tokens for $0.99.
-- **RevenueCat Entitlement:** `extra_grace_tokens` — checked before showing paywall. If already entitled, silently grant the token without paywall.
+### Trigger 3 — Locked Grace Token Paywall
+- **Trigger Condition:** `grace_tokens_available <= 0` AND user taps "Recover" (guillotine rescue or vault recovery).
+- **Entitlement Pre-check:** Before showing paywall, check RevenueCat entitlement `extra_grace_tokens`. If already entitled, silently grant 3 tokens and skip paywall entirely.
+- **Action:** Superwall presents paywall `grace_token_refill` (campaign `grace_token_pack`). Paywall offers token packs.
+- **Post-Purchase Flow:** Upon successful RevenueCat receipt validation:
+  1. RevenueCat fires entitlement update listener → app detects `extra_grace_tokens` granted
+  2. App increments `grace_tokens` in Supabase `users` table (`UPDATE users SET grace_tokens = grace_tokens + 3 WHERE id = $userId`)
+  3. App reads updated token count from Supabase and updates local state
+  4. The blocked action (guillotine rescue or vault recovery) proceeds
 - **A/B Variant A:** Paywall with one option ($0.99 / 3 tokens).
 - **A/B Variant B:** Paywall with two options ($0.99 / 3 tokens, $2.99 / 10 tokens).
 - **Measured metric:** Conversion rate, average revenue per paying user (ARPPU).
+- **Paywall UI:** Midnight Luxe palette (`#0D0D12` background, `#C9A84C` accent, `#FAF8F5` text). Magnetic button style with 1.03 hover scale. Close button respects safe-area insets (`env(safe-area-inset-top)` on web, `SafeAreaView` on RN).
 
 ---
 
@@ -94,9 +100,11 @@ On initial launch, users are bucketed into one of three personas via a 3-questio
 2. Superwall calls RevenueCat.purchasePackage(package)
 3. RevenueCat processes through Google Play Billing
 4. RevenueCat returns entitlement result (granted / failed)
-5. RevenueCat fires entitlement update listener
-6. Superwall observes entitlement change → dismisses paywall
-7. App reads entitlement state → unlocks feature
+5. RevenueCat fires entitlement update listener → app detects `extra_grace_tokens`
+6. App calls Supabase: `UPDATE users SET grace_tokens = grace_tokens + 3 WHERE id = $userId`
+7. App updates local `graceTokens` state from Supabase response
+8. Superwall observes entitlement change → dismisses paywall
+9. The blocked action (guillotine rescue / vault recovery) proceeds with updated token count
 ```
 
 **Implementation notes:**
