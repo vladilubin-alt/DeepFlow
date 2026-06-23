@@ -1,57 +1,42 @@
-# DeepFlow ADHD Writing Timer Task Plan
+# DeepFlow — Expanded Phase 5 Task Plan
 
-## Phases & Goals
+## Priority Queue (Mobile Release & Marketplace)
 
-### Phase B: Blueprint Discovery & Schema Definition
-- [x] Answer the 5 Discovery Questions
-- [x] Define JSON Data Schemas in `gemini.mmd`
-- [x] Setup folder structures and environments
+### P1 — Mobile Wrapper (Capacitor)
+- [ ] Install `@capacitor/core` + `@capacitor/cli`
+- [ ] `npx cap init` (app name: "DeepFlow", app ID: "com.deepflow.app")
+- [ ] `npx cap add android`
+- [ ] Install Android SDK + JDK 17 (prerequisite)
+- [ ] Build APK: `npx cap sync && npx cap open android`
+- [ ] Configure `capacitor.config.ts` with safe-area insets, status bar, splash screen
+- [ ] Test on Android emulator / physical device
+- [ ] iOS: Requires macOS Xcode + `npx cap add ios`
 
-### Phase L: Connectivity & API Handshakes
-- [x] Setup Supabase connection, schemas, and RLS policies
-- [x] Configure environment variables in `.env`
-- [x] Verify connectivity and health check endpoints
+### P2 — Session History Dashboard
+- [ ] Create `/history` view querying `writing_sessions` table
+- [ ] Streak calendar (GitHub-style contribution graph)
+- [ ] Word count trends over time
+- [ ] Guillotine rate analytics (optional)
 
-### Phase A: Architecting the Smallest Useful Vertical Slice
-- [x] Core Timer logic implementation
-- [x] Forgiving Guillotine state machine
-- [x] Session tracking and state management
-- [/] Layer 1: Create architecture documentation
-  - [/] `architecture/guillotine_logic.md` (Consequence Tiers & Streak Preservation)
-  - [/] `architecture/sync_protocol.md` (Cloud-Sync Guardrails & Graveyard protocol)
-- [ ] Layer 3: Implement `execution/validate_keystrokes.py` (Smart Keystroke Validation)
-- [ ] Logic Expansion:
-  - [x] Expand state machine with Grace Token consumption (in `state_machine.js`)
-  - [ ] Implement "Graveyard" (Tiered Vault) backup logic in `sync_service.js`
-- [ ] Security Hardening:
-  - [ ] Create and enable RLS policies on `graveyard` table via Supabase MCP
-  - [ ] Verify server-side validation design
-- [/] Install Node.js runtime and run test suite
+### P3 — Auth Upgrade (OAuth)
+- [ ] Add Google/Apple OAuth login
+- [ ] Link anonymous `uid()` to permanent OAuth identity
+- [ ] Data migration script: reassign `user_id` from anonymous to OAuth UUID
+- [ ] Documented in `architecture/auth_migration.md`
 
+### P4 — Analytics (Mixpanel)
+- [ ] Wire Mixpanel token from `.env`
+- [ ] Track: session start, guillotine, grace token use, recovery
+- [ ] Dashboard for funnel analysis
 
-### Phase S: Styling & Refinement
-- [ ] Apple-esque minimalistic UI implementation
-- [ ] Mascot integration and subtle micro-animations
-- [ ] ADHD flares and interactive design polishing
-
-### Phase T: Trigger & Deployment
-- [ ] APK packaging
-- [ ] Play Store / ASO metadata compilation
+### P5 — Revenue (Stripe / RevenueCat)
+- [ ] Wire Stripe webhook + RevenueCat SDK
+- [ ] Premium feature gate: extra Grace Tokens, extended graveyard retention
+- [ ] Subscription tier model documentation
 
 ---
 
-## Current Sprint Checklist
-- [x] Create project structure and project memory files
-- [x] Run discovery questions and halt for user response
-- [x] Populate schemas in `gemini.mmd`
-- [x] Generate SQL schema script ([supabase_schema.sql](file:///Users/vladi/Desktop/DeepFlow/stages/02_Link/supabase_schema.sql))
-- [x] Set active Supabase credentials in `.env` and verify connectivity
-- [x] Apply SQL schema to Supabase and enable RLS
-- [x] Implement state machine, timer, sync service, session orchestrator
-- [x] Bootstrap Node.js runtime and verify base test harness (44 tests passing)
-- [/] Initialize Layer 1 Architecture documentation
-- [ ] Implement Layer 3 `execution/validate_keystrokes.py` Smart Keystroke Validation
-- [ ] Implement Graveyard backup logic and apply RLS policies for `graveyard`
-- [ ] Run self-annealing check and verify logic integration
-
-
+## Status Legend
+- `[ ]` Not started
+- `[/]` In progress
+- `[x]` Complete

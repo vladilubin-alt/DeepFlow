@@ -11,6 +11,13 @@ DeepFlow is an ADHD-focused writing timer designed to help users enter and maint
 ## Architectural Invariants
 - **Deterministic Business Logic**: Timer state, guillotine logic, penalty calculations, and session logging must be 100% deterministic and validated on the backend.
 - **Probabilistic UI**: UI transitions, feedback loops, and decorative elements can be dynamic/probabilistic to maintain high novelty.
+- **Capacitor Build Rules**:
+  - Safe-area insets: Use `env(safe-area-inset-top)` and `env(safe-area-inset-bottom)` on all full-width containers to avoid notches and home indicators.
+  - Status bar: Configure `StatusBar.setOverlaysWebView({ overlay: false })` on app init to prevent content from rendering under the status bar.
+  - Splash screen: Use `@capacitor/splash-screen` plugin with Midnight Luxe background color (`#0D0D12`) — no logo, just a clean fade.
+  - Keyboard handling: `Keyboard.setResizeMode('body')` on Android to prevent the keyboard from compressing the viewport.
+  - File access: Capacitor WebView uses `http://localhost` — no CORS issues for Supabase REST calls.
+  - Deep links (future): Register custom URL scheme `deepflow://` for OAuth callback redirects.
 
 ## Security Policy (80/20 Rule)
 - **Row Level Security (RLS)**: Enforced on all tables ("User A can only see User A's data").
