@@ -122,4 +122,38 @@ The Recovery Vault (see `src/components/VaultModal.jsx`) already queries `gravey
 
 ---
 
-*Document version: 1.0 — Phase 5 Expansion*
+---
+
+## 6. Secret Management Policy
+
+### 6.1 Prohibition on Hardcoded Keys
+
+**All API keys, tokens, and secrets MUST be loaded from environment variables.** No raw key strings may appear in source code files (`.js`, `.jsx`, `.ts`, `.tsx`, etc.). This includes Superwall, RevenueCat, Supabase, Stripe, and Mixpanel credentials.
+
+### 6.2 Approved Access Patterns
+
+| Platform | Mechanism | Config File |
+|----------|-----------|-------------|
+| **React Native** | `react-native-config` (via `Config.X`) | `DeepFlowMobile/.env` (gitignored) |
+| **Web (Vite)** | `import.meta.env.VITE_X` | root `.env` (gitignored) |
+| **Python scripts** | `os.getenv("X")` with `python-dotenv` | root `.env` (gitignored) |
+| **CI/CD** | Repository secrets / environment variables | GitHub Actions / Netlify env vars |
+
+### 6.3 `.env` File Rules
+
+- Each platform that needs env vars gets its own `.env` file at the module root.
+- `.env` files are listed in `.gitignore` and **never committed**.
+- `.env.example` files contain placeholder values (`pk_xxx`, `sk_xxx`) and **are committed**.
+- All `.env` files must use `KEY=VALUE` format (one per line, no quotes).
+- Values must not contain trailing whitespace or inline comments.
+
+### 6.4 Audit Procedure
+
+Before every signed release:
+1. Run `grep -r 'sk_live\|pk_live\|sk_test\|pk_test' src/ DeepFlowMobile/src/` — **zero matches required in source code**.
+2. Verify `.env.example` is present and contains no real keys.
+3. Verify `.gitignore` lists `.env` and `.env.*` except `.env.example`.
+
+---
+
+*Document version: 1.1 — Phase 5.2 Security Hardening*

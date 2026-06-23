@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { initSuperwall } from './src/services/SuperwallService';
+import { isOnboardingComplete, presentFlareQuiz } from './src/services/FlareQuizService';
 
 import HomeScreen from './src/screens/HomeScreen';
 import ActiveSessionScreen from './src/screens/ActiveSessionScreen';
@@ -25,9 +26,20 @@ function TabIcon({ label, focused }) {
 }
 
 export default function App() {
+  const [ready, setReady] = useState(false);
+
   useEffect(() => {
-    initSuperwall();
+    (async () => {
+      await initSuperwall();
+      const done = await isOnboardingComplete();
+      if (!done) {
+        await presentFlareQuiz();
+      }
+      setReady(true);
+    })();
   }, []);
+
+  if (!ready) return null;
 
   return (
     <SafeAreaProvider>

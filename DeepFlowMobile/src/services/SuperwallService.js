@@ -1,8 +1,8 @@
 import Purchases from 'react-native-purchases';
-import { Platform } from 'react-native';
+import Config from 'react-native-config';
 
-const SUPERWALL_API_KEY = 'pk_juRmfKDHkdolpM3z8Y7Ci';
-const REVENUECAT_API_KEY = 'sk_XuQakZoBcHjRxMdUSCwZtuDRjoUYH';
+const SUPERWALL_API_KEY = Config.SUPERWALL_API_KEY;
+const REVENUECAT_API_KEY = Config.REVENUECAT_API_KEY;
 
 let initialized = false;
 

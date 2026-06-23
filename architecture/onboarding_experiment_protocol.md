@@ -30,45 +30,52 @@ User Action → Superwall Trigger → Campaign Rule → Paywall / Quiz / Report
 
 ## 3. Onboarding Schema — The "Flare" Quiz
 
-On initial launch, users are bucketed into one of three personas via a 3-question quiz rendered by Superwall.
+On initial launch, users are bucketed into one of five Flare personas via a multi-step survey rendered by Superwall (placement: `onboarding_flare_quiz`). The quiz uses a single self-identification question with five options, followed by confirmation.
 
-### Question 1 — Primary Pain Point
-> "When writing, I most often struggle with:"
-- Running out of time without noticing → **Time Warp**
-- Staring at a blank page, unable to start → **Task Freeze**
-- Feeling overwhelmed by too many choices → **Decision Fog**
+### Question 1 — Primary Pain Point (single-select)
+> "Which feels most like you when you sit down to write?"
+1. **"I lose track of time and suddenly the day is gone."** → **Time Warp**
+2. **"I stare at a blank page and can't type the first word."** → **Task Freeze**
+3. **"I get hyper-focused on formatting, research, or perfecting one sentence."** → **Hyperfocus Hijack**
+4. **"There are too many choices — font, topic, structure — I shut down."** → **Decision Fog**
+5. **"I write a bit, hate it, delete it, and feel like a fraud."** → **Crash & Guilt**
 
-### Question 2 — Secondary Signal
-> "My ideal writing session feels:"
-- Like a race against the clock → **Time Warp**
-- Like a guided meditation → **Task Freeze**
-- Like a clear, simple path forward → **Decision Fog**
+### Question 2 — Confirmation (single-select)
+> "I'd most like my writing session to feel like:"
+1. A race I'm afraid of losing → **Time Warp**
+2. A safe space with a gentle guide → **Task Freeze**
+3. Deep immersion where nothing else exists → **Hyperfocus Hijack**
+4. A clear, minimal path with no options → **Decision Fog**
+5. Permission to write badly and keep going → **Crash & Guilt**
 
-### Question 3 — Tertiary Confirmation
-> "The most important feature for me is:"
-- Timer and streak tracking → **Time Warp**
-- Prompts and encouragement → **Task Freeze**
-- Minimal setup, just write → **Decision Fog**
-
-**Bucket assignment:** Majority vote across 3 questions. Tie → default to Time Warp.
+**Assignment:** The answer to Question 1 determines the Flare. Question 2 confirms or adjusts (if the user picks a conflict, Q1 takes priority). Ties resolve to Time Warp as default.
 
 ### Per-Flare UI Treatment
 
-| Flare | Default Duration | AI Mode | Sensory Layer | Setup Complexity |
-|-------|-----------------|---------|---------------|------------------|
-| Time Warp | 45 min | silent | off | Full (all 4 controls) |
-| Task Freeze | 25 min | coach | alpha | Simplified (duration + AI mode only) |
-| Decision Fog | 25 min | coach | off | Minimal (preset: 25 min, 300 words, coach) |
+| Flare | Default Duration | AI Mode | Sensory Layer | Setup Complexity | Tone |
+|-------|-----------------|---------|---------------|------------------|------|
+| Time Warp | 45 min | silent | off | Full (all 4 controls) | Urgent, race-against-clock |
+| Task Freeze | 25 min | coach | alpha | Simplified (duration + AI mode) | Gentle, encouraging |
+| Hyperfocus Hijack | 30 min | silent | theta | Full (all 4 controls) | Deep-work, minimise friction |
+| Decision Fog | 25 min | coach | off | Minimal (preset: 25 min/300w/coach) | Minimal, one-tap start |
+| Crash & Guilt | 15 min | demon | off | Minimal (preset: 15 min/100w/demon) | Permission to write badly |
 
 ---
 
 ## 4. Trigger Logic
 
 ### Trigger 1 — Initial Launch (Flare Quiz)
+- **Placement:** `onboarding_flare_quiz` (Superwall campaign).
 - **When:** First app open after install (checked via `AsyncStorage` / `localStorage` key `@deepflow/onboarding_complete`).
-- **Action:** Superwall presents the Flare Quiz campaign (`campaign_id: onboarding_flare_quiz`).
-- **On completion:** Write `@deepflow/flare` to storage with the assigned bucket name. Proceed to session setup with per-flare defaults.
-- **Control group:** 10% of users skip the quiz and receive default settings (Time Warp defaults). Measured against quiz-takers for activation lift.
+- **Content:** 2-step survey — Question 1 (5 Flare self-ID) → Question 2 (confirmation). Superwall renders the survey natively.
+- **Action:** Superwall presents the Flare Quiz campaign. Quiz answers determine the assigned Flare persona.
+- **On completion:**
+  1. Write `@deepflow/flare` to AsyncStorage with the assigned bucket name (e.g. `"time_warp"`).
+  2. Store the flare name as a RevenueCat subscriber attribute: `Purchases.setAttributes({ flare: "time_warp" })` for later segment auditing.
+  3. Write `@deepflow/onboarding_complete` to AsyncStorage to prevent re-trigger.
+  4. Proceed to Home screen with per-flare defaults applied to SessionSetup (duration, AI mode, sensory layer).
+- **Control group:** 10% of users skip the quiz and receive default settings (Time Warp defaults: 45 min, silent, off). Measured against quiz-takers for activation lift.
+- **RevenueCat attribute:** `flare` — stored on the customer record for cohort analysis and campaign targeting.
 
 ### Trigger 2 — Post-Session "Focus Report"
 - **When:** Session transitions to `completed` or `guillotined`.
@@ -118,7 +125,7 @@ On initial launch, users are bucketed into one of three personas via a 3-questio
 
 | Campaign ID | Trigger | Paywall Template | Audience |
 |-------------|---------|-----------------|----------|
-| `onboarding_flare_quiz` | App launch (first) | Quiz (3-step) | New users |
+| `onboarding_flare_quiz` | App launch (first) | Quiz (2-step, 5 Flares) | New users |
 | `focus_report` | Session end | Card (metrics + upsell) | All active users |
 | `grace_token_pack` | 0 tokens → use attempt | Paywall (1-2 options) | Users at 0 tokens |
 
