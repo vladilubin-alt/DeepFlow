@@ -123,6 +123,28 @@ Detects gibberish by analyzing vowel/consonant ratios and clusters.
 
 ---
 
+## Git & Deployment Infrastructure
+
+### Remote
+- **Origin**: `git@github.com:Vladi758/DeepFlow.git` (SSH)
+- **SSH Key**: `~/.ssh/github_deploy` (ed25519, `ssh -T git@github.com` verified)
+- **Branch**: `main` (single trunk)
+
+### Netlify CI/CD Build Settings
+- **Production URL**: `https://gleeful-liger-6f788b.netlify.app`
+- **Netlify Admin**: `https://app.netlify.com/projects/gleeful-liger-6f788b`
+- **Build Command**: `npm run build` (via `netlify.toml`)
+- **Publish Directory**: `dist/`
+- **SPA Redirect**: `/* → /index.html` (status 200)
+- **Trigger**: Push to `main` → automatic production deploy
+
+### Node Runtime
+- **Local**: `.tmp/node-v22.12.0-darwin-x64/bin/node`
+- **Package Manager**: npm 10.9.0
+- **Build Tool**: Vite 8.0.16
+
+---
+
 ## Maintenance Log
 
 | Date | Version | Change | Author |
@@ -131,4 +153,8 @@ Detects gibberish by analyzing vowel/consonant ratios and clusters.
 | 2026-06-22 | v0.4.1 | Anonymous Auth Flow: `signInAnonymously()` handshake, `setAuth()` propagation to SyncService | DeepFlow |
 | 2026-06-22 | v0.4.1 | Keystroke Validation Gate: ported heuristics from `validate_keystrokes.py` to `src/utils/keystrokeValidator.js` | DeepFlow |
 | 2026-06-22 | v0.4.1 | Emergency Recovery SOP: `architecture/emergency_recovery.md` with Graveyard manual access steps | DeepFlow |
-| 2026-06-22 | v0.4.1 | Netlify deploy: `netlify.toml` config, anonymous deploy to `bright-raindrop-13667d.netlify.app` | DeepFlow |
+| 2026-06-22 | v0.4.1 | Netlify deploy: `netlify.toml` config, anonymous deploy, permanent site at gleeful-liger-6f788b | DeepFlow |
+| 2026-06-22 | v0.4.2 | Recovery Vault UI: `VaultModal`, `useGraveyard` hook, shared `supabase.js` client | DeepFlow |
+| 2026-06-22 | v0.4.2 | SSH Git remote (ed25519), Netlify-to-GitHub CI/CD linkage | DeepFlow |
+| 2026-06-22 | v0.4.2 | Supabase Auth Site URL + Redirect URLs configured for production origin | DeepFlow |
+| 2026-06-22 | v0.4.2 | Project Memory sealed — all 5 Phases complete | DeepFlow |
