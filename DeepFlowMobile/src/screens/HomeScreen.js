@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colours } from '../theme/colours';
+import { useTheme } from '../theme/ThemeContext';
 import TopBar from '../components/TopBar';
 import StatStrip from '../components/StatStrip';
 import SegmentedControl from '../components/SegmentedControl';
@@ -12,6 +12,7 @@ const sensoryOpts = ['off', 'alpha', 'beta'];
 const aiModeOpts = ['silent', 'coach', 'demon'];
 
 export default function HomeScreen({ navigation }) {
+  const { colours } = useTheme();
   const [durationIdx, setDurationIdx] = useState(1);
   const [wordTargetIdx, setWordTargetIdx] = useState(1);
   const [sensoryIdx, setSensoryIdx] = useState(0);

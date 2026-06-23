@@ -1,7 +1,8 @@
 import { View, Text, TouchableOpacity } from 'react-native';
-import { colours } from '../theme/colours';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function SegmentedControl({ options, selectedIndex, onSelect }) {
+  const { colours } = useTheme();
   return (
     <View style={{ flexDirection: 'row', backgroundColor: colours.backgroundSurface, borderRadius: 8, padding: 2 }}>
       {options.map((opt, i) => {

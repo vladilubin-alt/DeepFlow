@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colours } from '../theme/colours';
+import { useTheme } from '../theme/ThemeContext';
 
 const MOCK_VAULT = [
   { id: '1', title: 'Untitled draft', failedAt: new Date(Date.now() - 30 * 60 * 1000), wordCount: 145, recovered: false },
@@ -27,6 +27,7 @@ function timeAgo(date) {
 }
 
 export default function VaultScreen() {
+  const { colours } = useTheme();
   const [vault, setVault] = useState(MOCK_VAULT);
 
   const handleRecover = (id) => {

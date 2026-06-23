@@ -1,7 +1,8 @@
-import { View, Text, TouchableOpacity } from 'react-native';
-import { colours } from '../theme/colours';
+import { View, Text } from 'react-native';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function TopBar({ labelRight, dotColour, subtitle }) {
+  const { colours } = useTheme();
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, paddingBottom: 4 }}>
       <View>

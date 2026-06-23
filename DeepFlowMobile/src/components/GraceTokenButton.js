@@ -1,7 +1,8 @@
 import { View, Text, TouchableOpacity } from 'react-native';
-import { colours } from '../theme/colours';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function GraceTokenButton({ count, onUse }) {
+  const { colours } = useTheme();
   if (!count || count <= 0) return null;
   return (
     <TouchableOpacity

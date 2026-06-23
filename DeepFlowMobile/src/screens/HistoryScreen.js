@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colours } from '../theme/colours';
+import { useTheme } from '../theme/ThemeContext';
 
 const MOCK_HISTORY = [
   { date: 'Jun 22', duration: '25 min', words: 420, success: true },
@@ -14,6 +14,7 @@ const MOCK_HISTORY = [
 ];
 
 export default function HistoryScreen() {
+  const { colours } = useTheme();
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colours.backgroundBase }}>
       <ScrollView style={{ flex: 1, paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 100 }}>

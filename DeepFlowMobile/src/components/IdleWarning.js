@@ -1,7 +1,8 @@
 import { View, Text } from 'react-native';
-import { colours } from '../theme/colours';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function IdleWarning({ idleMs, thresholdMs }) {
+  const { colours } = useTheme();
   if (idleMs == null || idleMs <= 0) return null;
   const remaining = Math.max(0, Math.ceil((thresholdMs - idleMs) / 1000));
   return (

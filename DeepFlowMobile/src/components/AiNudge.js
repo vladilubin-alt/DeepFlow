@@ -1,7 +1,8 @@
 import { View, Text, TouchableOpacity } from 'react-native';
-import { colours } from '../theme/colours';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function AiNudge({ prompt, onDismiss }) {
+  const { colours } = useTheme();
   if (!prompt) return null;
   return (
     <TouchableOpacity onPress={onDismiss} style={{

@@ -1,7 +1,8 @@
 import { View } from 'react-native';
-import { colours } from '../theme/colours';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function OrbVisualiser({ state }) {
+  const { colours } = useTheme();
   const isWarning = state === 'warning' || state === 'guillotined';
   const isActive = state === 'writing' || state === 'saved_by_grace';
   const ringColour = isWarning ? colours.stateDanger : colours.accentGold;

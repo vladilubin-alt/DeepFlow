@@ -1,8 +1,9 @@
 import { View, Text } from 'react-native';
-import { colours } from '../theme/colours';
+import { useTheme } from '../theme/ThemeContext';
 import ProgressBar from './ProgressBar';
 
 export default function TimerDisplay({ remainingMs, wordsWritten, targetWords }) {
+  const { colours } = useTheme();
   const totalSec = Math.max(0, Math.floor(remainingMs / 1000));
   const mins = Math.floor(totalSec / 60);
   const secs = totalSec % 60;

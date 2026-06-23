@@ -1,7 +1,8 @@
 import { View, Text } from 'react-native';
-import { colours } from '../theme/colours';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function StatStrip({ streak, graceTokens }) {
+  const { colours } = useTheme();
   const Card = ({ label, value, suffix }) => (
     <View style={{ flex: 1, backgroundColor: colours.backgroundSurface, borderRadius: 8, padding: 14, marginHorizontal: 3 }}>
       <Text style={{ fontSize: 9, color: colours.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{label}</Text>

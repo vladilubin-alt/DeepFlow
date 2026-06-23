@@ -1,7 +1,8 @@
 import { View, Text, TextInput } from 'react-native';
-import { colours } from '../theme/colours';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function WritingArea({ text, onTextChange, editable, fadingText, state }) {
+  const { colours } = useTheme();
   const isDanger = state === 'guillotined' || state === 'warning';
   const bgColour = isDanger ? colours.backgroundDanger : colours.backgroundSurface;
 

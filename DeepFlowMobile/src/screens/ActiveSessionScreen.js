@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colours } from '../theme/colours';
+import { useTheme } from '../theme/ThemeContext';
 import { GuillotineStateMachine, EVENTS, STATES } from '../logic/GuillotineStateMachine';
 import { TimerController } from '../logic/TimerController';
 import TopBar from '../components/TopBar';
@@ -13,6 +13,7 @@ import IdleWarning from '../components/IdleWarning';
 import GraceTokenButton from '../components/GraceTokenButton';
 
 export default function ActiveSessionScreen({ route, navigation }) {
+  const { colours } = useTheme();
   const { durationMinutes, targetWords, sensoryMode, aiMode } = route.params;
 
   const [state, setState] = useState(STATES.IDLE);
