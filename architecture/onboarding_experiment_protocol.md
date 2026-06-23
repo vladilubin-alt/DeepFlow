@@ -167,7 +167,8 @@ On initial launch, users are bucketed into one of five Flare personas via a mult
 
 | File | Purpose |
 |------|---------|
-| `.env` | `SUPERWALL_API_KEY` (placeholder) |
+| root `.env` | `SUPERWALL_API_KEY`, `REVENUECAT_API_KEY` (gitignored) |
+| `DeepFlowMobile/.env` | Same keys for RN (gitignored, loaded via `react-native-config`) |
 | `tools/verify_superwall.py` | API key validity + campaign reachability check |
 | `gemini.mmd` | Integrations section with Superwall + RevenueCat + Flare schema |
 | `task_plan.md` | P2.1 task list inserted before P5 |
