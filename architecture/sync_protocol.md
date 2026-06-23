@@ -90,3 +90,17 @@ sequenceDiagram
 | Guillotine | `saveToGraveyard()` | Insert succeeds (auth.uid() = user_id) |
 | Page reload | Supabase restores session from localStorage | `auth.uid()` restored |
 | Clear data / incognito | New anonymous session created | New user, new RLS identity |
+
+### 4.4 Supabase Auth Redirect Configuration
+
+To match the production Netlify URL, configure the following in the Supabase Dashboard under **Authentication → URL Configuration**:
+
+| Setting | Value |
+|---------|-------|
+| **Site URL** | `https://gleeful-liger-6f788b.netlify.app` |
+| **Redirect URLs** | `https://gleeful-liger-6f788b.netlify.app/**` |
+
+These values ensure that:
+- `signInAnonymously()` redirects resolve correctly against the production origin.
+- OAuth callback URLs (if added later) will be accepted.
+- The Supabase client's built-in session recovery via `localStorage` matches the expected auth flow.
