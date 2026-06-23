@@ -172,14 +172,11 @@ export class DeepFlowSession {
   _onTransition(entry) {
     const { to } = entry;
 
-    // When session completes, persist everything
-    if (to === STATES.COMPLETED) {
-      this._finishSession();
-    }
-
-    // When guillotined, persist the session record
-    if (to === STATES.GUILLOTINED) {
-      this._finishSession();
+    // When session completes or guillotined, persist everything
+    if (to === STATES.COMPLETED || to === STATES.GUILLOTINED) {
+      this._finishSession().catch((err) =>
+        console.error('[DeepFlowSession] _finishSession failed:', err)
+      );
     }
   }
 
@@ -206,20 +203,30 @@ export class DeepFlowSession {
       status: this.machine.sessionStatus,
     };
 
-    await this.sync.saveSession(session);
+    // Critical: save session record — failures here are shown to user
+    const sessionOk = await this.sync.saveSession(session);
 
-    // If session was guillotined, silently backup to Graveyard (Tiered Vault)
+    // Non-critical: graveyard backup (failure is logged, not shown)
     if (this._userId && (ctx.guillotineTriggered || session.status === 'guillotined')) {
       const wordCount = this._countWords(this._text);
-      await this.sync.saveToGraveyard(this._sessionId, this._userId, this._text, wordCount);
+      try {
+        await this.sync.saveToGraveyard(this._sessionId, this._userId, this._text, wordCount);
+      } catch (e) {
+        console.warn('[DeepFlowSession] graveyard save failed (non-critical):', e);
+      }
     }
 
-    // Update profile last_active_at
+    // Non-critical: profile update (failure is logged, not shown)
     if (this._userId) {
-      await this.sync.updateProfile(this._userId, {
-        last_active_at: now,
-      });
+      try {
+        await this.sync.updateProfile(this._userId, { last_active_at: now });
+      } catch (e) {
+        console.warn('[DeepFlowSession] profile update failed (non-critical):', e);
+      }
     }
+
+    // Reset sync indicator — session sync is done
+    this.sync.resetStatus();
   }
 
   /** @private Simple word counter. */

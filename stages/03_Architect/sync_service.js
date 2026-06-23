@@ -58,6 +58,11 @@ export class SyncService {
     return () => this._listeners.delete(fn);
   }
 
+  /** Reset sync status to idle (called after session finalisation). */
+  resetStatus() {
+    this._setStatus(SYNC_STATUS.IDLE);
+  }
+
   /** @private */
   _setStatus(s) {
     this._status = s;
