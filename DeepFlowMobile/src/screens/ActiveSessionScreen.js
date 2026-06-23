@@ -5,6 +5,7 @@ import { useTheme } from '../theme/ThemeContext';
 import { GuillotineStateMachine, EVENTS, STATES } from '../logic/GuillotineStateMachine';
 import { TimerController } from '../logic/TimerController';
 import { triggerGraceTokenPaywall } from '../services/SuperwallService';
+import { track } from '../services/AnalyticsService';
 import TopBar from '../components/TopBar';
 import TimerDisplay from '../components/TimerDisplay';
 import OrbVisualiser from '../components/OrbVisualiser';
@@ -41,7 +42,10 @@ export default function ActiveSessionScreen({ route, navigation }) {
   const useGraceToken = useCallback(() => {
     if (!machineRef.current) return;
     const ok = machineRef.current.send(EVENTS.USE_GRACE_TOKEN);
-    if (ok) return;
+    if (ok) {
+      track('Grace Token Used (manual)', { graceTokens: machineRef.current.ctx.graceTokens });
+      return;
+    }
     triggerGraceTokenPaywall(() => {
       const tokens = 3;
       setTimerData((prev) => ({ ...prev, graceTokens: tokens }));
@@ -74,10 +78,16 @@ export default function ActiveSessionScreen({ route, navigation }) {
       setState(entry.to);
       if (entry.to === STATES.GUILLOTINED) {
         setNudge('Session guillotined — use a grace token to recover.');
+        track('Session Guillotined', { durationMinutes, targetWords, wordsWritten: entry.ctx.wordsWritten });
+      } else if (entry.to === STATES.COMPLETED) {
+        track('Session Completed', { durationMinutes, targetWords, wordsWritten: entry.ctx.wordsWritten });
+      } else if (entry.to === STATES.SAVED_BY_GRACE) {
+        track('Grace Token Used (auto)', { graceTokens: entry.ctx.graceTokens });
       }
     });
 
     machine.send(EVENTS.START);
+    track('Session Started', { durationMinutes, targetWords, sensoryMode, aiMode });
     timer.start();
 
     machineRef.current = machine;

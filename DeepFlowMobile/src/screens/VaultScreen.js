@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 import { triggerGraceTokenPaywall } from '../services/SuperwallService';
+import { track } from '../services/AnalyticsService';
 
 const MOCK_VAULT = [
   { id: '1', title: 'Untitled draft', failedAt: new Date(Date.now() - 30 * 60 * 1000), wordCount: 145, recovered: false },
@@ -40,10 +41,12 @@ export default function VaultScreen() {
     if (graceTokens > 0) {
       setGraceTokens((t) => t - 1);
       setVault((prev) => prev.map((v) => v.id === id ? { ...v, recovered: true } : v));
+      track('Vault Recovered', { wordCount: item.wordCount, method: 'grace_token' });
     } else {
       triggerGraceTokenPaywall(() => {
         setGraceTokens((t) => t + 3);
         setVault((prev) => prev.map((v) => v.id === id ? { ...v, recovered: true } : v));
+        track('Vault Recovered', { wordCount: item.wordCount, method: 'paywall' });
       });
     }
   };

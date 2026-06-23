@@ -156,4 +156,76 @@ Before every signed release:
 
 ---
 
-*Document version: 1.1 — Phase 5.2 Security Hardening*
+## 7. Native Deep Link Configuration
+
+The OAuth flow uses the custom URI scheme `deepflow://auth/callback` to return the user to the app after browser-based sign-in. Each platform requires native configuration.
+
+### 7.1 Android (Capacitor)
+
+**File:** `android/app/src/main/AndroidManifest.xml`
+
+The main activity already includes the intent-filter to handle the `deepflow` scheme. Verify the `<activity>` block contains:
+
+```xml
+<intent-filter>
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="deepflow" android:host="auth" android:pathPrefix="/callback" />
+</intent-filter>
+```
+
+**Notes:**
+- `android:launchMode="singleTask"` is already set on the activity (required for deep links to re-route to the existing activity instead of creating a new one).
+- Capacitor's `BridgeActivity` automatically handles incoming intents and forwards them to the web layer via `onNewIntent`.
+
+**Test from terminal (device/emulator must be running):**
+```bash
+adb shell am start -W -a android.intent.action.VIEW -d "deepflow://auth/callback?code=test" com.deepflow.app
+```
+
+After running the command, the app should be brought to the foreground and the auth callback handled.
+
+### 7.2 iOS (Capacitor)
+
+**Prerequisite:** Run `npx cap add ios` to create the iOS native project.
+
+**File:** `ios/App/App/Info.plist`
+
+Add the following entry inside the `<dict>` block:
+
+```xml
+<key>CFBundleURLTypes</key>
+<array>
+    <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <string>deepflow</string>
+        </array>
+        <key>CFBundleURLName</key>
+        <string>com.deepflow.app</string>
+    </dict>
+</array>
+```
+
+**File:** `ios/App/App/AppDelegate.swift` (Capacitor template)
+
+Capacitor's `AppDelegate` already handles `application(_:open:options:)` via the `CAPBridgeViewController`. No additional code is needed — the bridge automatically routes custom URL schemes to the web layer.
+
+**Verify:**
+1. Open `ios/App/App/AppDelegate.swift` and confirm the `application(_:open:options:)` method exists (it is part of the Capacitor template). It should call `applicationDelegate.application(self, open: url, options: options)`.
+2. After building, use Safari to navigate to `deepflow://auth/callback?code=test` on the iOS simulator — it should open the app.
+
+### 7.3 Supabase Redirect Configuration
+
+In the Supabase dashboard, add the following redirect URL to **Authentication > URL Configuration > Redirect URLs**:
+
+```
+deepflow://auth/callback
+```
+
+This must be set for the OAuth provider (Google, Apple) to redirect back to the app after authentication.
+
+---
+
+*Document version: 1.2 — Phase 5.2 Security Hardening (added §7 Native Deep Link Configuration)*

@@ -5,6 +5,7 @@ import { useDeepFlowSession } from './hooks/useDeepFlowSession';
 import { useGraveyard } from './hooks/useGraveyard';
 import { useBinauralAudio } from './hooks/useBinauralAudio';
 import { STATES } from '@architect/session';
+import { track, identify } from './lib/analytics';
 import Header from './components/Header';
 import WritingArena from './components/WritingArena';
 import FlowOrb from './components/FlowOrb';
@@ -64,9 +65,17 @@ export default function App() {
   useEffect(() => {
     if (prevStateRef.current !== sessionState) {
       audio.updateState(sessionState);
+      const prev = prevStateRef.current;
       prevStateRef.current = sessionState;
+      if (sessionState === 'completed' && prev === 'writing') {
+        track('Session Completed', { duration, wordTarget, wordCount });
+      } else if (sessionState === 'guillotined') {
+        track('Session Guillotined', { duration, wordTarget, wordCount });
+      } else if (sessionState === 'saved_by_grace') {
+        track('Grace Token Used (auto)', { graceTokens });
+      }
     }
-  }, [sessionState, audio]);
+  }, [sessionState, audio, duration, wordTarget, wordCount, graceTokens]);
 
   useEffect(() => {
     supabase.auth.signInAnonymously().then(({ data, error }) => {
@@ -78,6 +87,8 @@ export default function App() {
       if (user && session) {
         setUserId(user.id);
         setAuth(user.id, session.access_token);
+        identify(user.id);
+        track('App Opened', { userId: user.id });
       }
     });
   }, [setAuth]);
@@ -99,11 +110,13 @@ export default function App() {
     setText(entry.content);
     keystroke(entry.content);
     setVaultOpen(false);
+    track('Vault Recovered', { wordCount: entry.word_count });
   }, [keystroke]);
 
   const handleStart = useCallback(() => {
     start(duration, wordTarget, userId);
-  }, [start, duration, wordTarget, userId]);
+    track('Session Started', { duration, wordTarget, aiMode });
+  }, [start, duration, wordTarget, userId, aiMode]);
 
   const handleTextChange = useCallback((value) => {
     setText(value);
@@ -111,13 +124,15 @@ export default function App() {
   }, [keystroke]);
 
   const handleUseGraceToken = useCallback(() => {
-    useGraceToken();
-  }, [useGraceToken]);
+    const ok = useGraceToken();
+    if (ok) track('Grace Token Used (manual)', { graceTokens: graceTokens - 1 });
+  }, [useGraceToken, graceTokens]);
 
   const handleGiveUp = useCallback(() => {
     giveUp();
     setText('');
-  }, [giveUp]);
+    track('Session Gave Up', { duration, wordTarget, wordCount });
+  }, [giveUp, duration, wordTarget, wordCount]);
 
   const handleReset = useCallback(() => {
     reset();

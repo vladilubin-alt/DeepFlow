@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function StreakCalendar({ streak }) {
+export default function StreakCalendar({ streak, sessions }) {
   const today = new Date();
   const days = [];
   for (let i = 27; i >= 0; i--) {
@@ -9,11 +9,12 @@ export default function StreakCalendar({ streak }) {
     days.push(d);
   }
 
-  const dayLabel = (d) => d.toLocaleDateString('en', { weekday: 'narrow' });
-  const isActive = (d) => {
-    const key = d.toISOString().split('T')[0];
-    return false;
-  };
+  const activeDates = new Set(
+    (sessions || [])
+      .filter(s => s.status === 'completed' || s.status === 'saved_by_grace')
+      .map(s => s.started_at?.split('T')[0])
+      .filter(Boolean),
+  );
 
   return (
     <div className="space-y-2">
@@ -24,14 +25,19 @@ export default function StreakCalendar({ streak }) {
           </div>
         ))}
         {days.map((d, i) => {
+          const key = d.toISOString().split('T')[0];
+          const hasSession = activeDates.has(key);
+          const isToday = key === today.toISOString().split('T')[0];
           const firstOfMonth = d.getDate() === 1;
           return (
             <div
               key={i}
-              className={`aspect-square rounded-md flex items-center justify-center text-xxs font-mono-custom
-                ${i < today.getDate() - 1
-                  ? 'bg-champagne/15 text-champagne'
-                  : 'bg-deep-slate text-stone-600'
+              className={`aspect-square rounded-md flex items-center justify-center text-xxs font-mono-custom transition-colors
+                ${hasSession
+                  ? 'bg-champagne text-deep-slate font-bold'
+                  : isToday
+                    ? 'bg-champagne/15 text-champagne'
+                    : 'bg-deep-slate text-stone-600'
                 }
                 ${firstOfMonth ? 'ring-1 ring-champagne/30' : ''}
               `}

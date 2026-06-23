@@ -9,27 +9,33 @@
 - [x] Install Android SDK + JDK 21 (prerequisite)
 - [x] Build APK: `npm run build && npx cap sync android && cd android && ./gradlew assembleDebug`
 - [x] Configure `capacitor.config.json` with safe-area insets, status bar, splash screen
+- [x] Deep link intent-filter for `deepflow://auth/callback` in AndroidManifest.xml
 - [ ] Test on Android emulator / physical device
 - [ ] iOS: Requires macOS Xcode + `npx cap add ios`
 
-### P2 — Session History Dashboard — [/] In Progress
+### P2 — Session History Dashboard — ✅ Complete
 - [x] Create `architecture/session_history_protocol.md` with data fetching, Focus Score, streak logic
 - [x] Install react-router-dom + recharts
 - [x] Create `/history` route with `HistoryView` component
 - [x] Streak calendar (Bento grid style) via `StreakCalendar` component
 - [x] Word count trend chart via `WordCountChart` (Recharts AreaChart)
 - [x] Focus Score per session (WPM variance + target completion)
+- [x] Wire StreakCalendar to live Supabase session data (was hardcoded to all-grey)
+- [x] Port useSessionHistory hook + HistoryScreen to React Native with live data
 - [ ] Generate signed APK for Play Store
 
-### P3 — Auth Upgrade (OAuth)
-- [ ] Add Google/Apple OAuth login
-- [ ] Link anonymous `uid()` to permanent OAuth identity
-- [ ] Data migration script: reassign `user_id` from anonymous to OAuth UUID
-- [ ] Documented in `architecture/auth_migration.md`
+### P3 — Auth Upgrade (OAuth) — ✅ Complete
+- [x] Add Google/Apple OAuth login button in Settings screen
+- [x] Link anonymous `uid()` to permanent OAuth identity via `supabase.auth.linkIdentity()`
+- [x] Deep link config: `deepflow://auth/callback` intent-filter in AndroidManifest.xml
+- [x] Documented in `architecture/auth_migration.md` (including §7 Native Deep Link Configuration)
+- [ ] Data migration script: reassign `user_id` from anonymous to OAuth UUID (fallback only)
 
-### P4 — Analytics (Mixpanel)
-- [ ] Wire Mixpanel token from `.env`
-- [ ] Track: session start, guillotine, grace token use, recovery
+### P4 — Analytics (Mixpanel) — ✅ Complete
+- [x] Wire Mixpanel token from `.env`
+- [x] Track: session start, guillotine, grace token use, recovery
+- [x] Web: `mixpanel-browser` installed + `src/lib/analytics.js` service
+- [x] Mobile: `mixpanel-react-native` installed + `AnalyticsService.js`
 - [ ] Dashboard for funnel analysis
 
 ### P2.1 — Superwall Onboarding & Revenue Gate — [/] In Progress
@@ -41,7 +47,6 @@
 - [x] Wire Grace Token guard in web `useDeepFlowSession.js` (early return when `graceTokens <= 0`)
 - [ ] Wire Trigger 1: Initial launch → Flare Quiz (Time Warp / Task Freeze / Decision Fog)
 - [ ] Wire Trigger 2: Post-session "Focus Report" value demonstration
-- [ ] Install RevenueCat SDK (`react-native-purchases`) for purchase controller
 - [ ] Wire Superwall → RevenueCat handshake (purchase controller + entitlement listener)
 - [ ] Wire VaultScreen recovery → Superwall paywall when user lacks tokens
 

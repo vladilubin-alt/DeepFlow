@@ -1,123 +1,168 @@
-# Session History Protocol — Analytics, Streaks & ASO
+# Session History Protocol — Retention & Focus Analytics
 
-**Classification:** Retention Metrics  
-**Scope:** Data fetching logic for `writing_sessions`, streak preservation via Grace Tokens, and ASO keyword placement.
+**Classification:** Data Logic  
+**Scope:** Daily writing volume tracking, streak preservation mechanics, Focus Score calculation, and Supabase query patterns for the /history dashboard.
 
 ---
 
-## 1. Data Fetching — `writing_sessions` Query
+## 1. Word Count Trend
 
-The history view queries Supabase with RLS enforcement:
+### 1.1 Data Source
+
+The `writing_sessions` table records every completed timer session. The trend aggregates daily word counts:
 
 ```sql
 select
-  id,
-  started_at,
-  ended_at,
-  duration_seconds,
-  target_words,
-  words_written,
-  guillotine_triggered,
-  grace_token_used,
-  status
-from public.writing_sessions
+  started_at::date as day,
+  sum(words_written) as total_words,
+  count(*) as session_count,
+  bool_or(guillotine_triggered) as had_guillotine
+from writing_sessions
 where user_id = auth.uid()
-order by started_at desc
-limit 50;
+  and started_at >= now() - interval '30 days'
+  and status in ('completed', 'saved_by_grace', 'guillotined')
+group by started_at::date
+order by day asc;
 ```
 
-**Frontend:** `supabase.from('writing_sessions').select('*').order('started_at', { ascending: false }).limit(50)`
+### 1.2 Chart Rendering
 
-### Focus Score Calculation
-Each session gets a **Focus Score** derived from WPM variance and completion rate:
+- **Library:** Recharts `AreaChart` (already installed)
+- **Granularity:** 1 bar per day for the last 30 days
+- **Fill:** Gradient from `#EF9F27` (champagne) to transparent
+- **Tooltip:** Day, total words, session count
+- **Empty state:** Grey placeholder line at 25% height with "Start your first session to see your trend"
 
-```js
-function focusScore(session) {
-  const durationMin = session.duration_seconds / 60;
-  const wpm = durationMin > 0 ? session.words_written / durationMin : 0;
-  const targetRatio = session.target_words > 0
-    ? Math.min(1, session.words_written / session.target_words)
-    : 0;
-  const penalty = session.guillotine_triggered ? 0.3 : 0;
-  return Math.round(Math.max(0, Math.min(100,
-    (wpm / 40) * 50 + targetRatio * 50 - penalty * 100
-  )));
-}
+### 1.3 Weekly Rolling Average
+
+Overlay a dashed `Line` component showing the 7-day rolling average to smooth ADHD variability spikes:
+```sql
+avg(words_written) over (order by day rows between 6 preceding and current row)
 ```
 
-| Factor | Weight | Notes |
-|--------|--------|-------|
-| WPM (vs 40 wpm baseline) | 50% | 40+ wpm = full score |
-| Target completion ratio | 50% | words_written / target_words |
-| Guillotine penalty | -30% | Applied if guillotine_triggered = true |
+(Calculated client-side from the aggregated daily data.)
 
 ---
 
 ## 2. Streak Preservation Logic
 
-Per the Constitution, a "missed day" automatically consumes a **Grace Token** to preserve the streak. This logic lives in the history view's streak calendar.
+### 2.1 Definition
 
-### 2.1 Algorithm
-
-1. Query all sessions from the last 365 days.
-2. Group by date (UTC). Any date with ≥1 session = "active day."
-3. Starting from today, walk backward:
-   - Active day → streak continues.
-   - Missed day → if `grace_tokens > 0`, auto-consume 1 token and mark day as "grace-saved."
-   - If no tokens remaining, streak breaks at that date.
-4. Display: consecutive streak length, tokens consumed this streak.
-
-### 2.2 Edge Cases
-
-- **Same-day sessions**: Multiple sessions on one day count as a single active day.
-- **Midnight rollover**: UTC dates prevent timezone ambiguity.
-- **Token exhaustion**: When tokens = 0 and a day is missed, streak resets to 0. Tokens regenerate at 1 per 7 consecutive active days.
-
-### 2.3 Frontend Implementation
+A **streak** is the number of consecutive calendar days (UTC) on which the user completed at least one writing session with status `completed` or `saved_by_grace`.
 
 ```js
-function calculateStreak(sessions) {
+function calcStreak(sessions) {
   const activeDates = new Set(
     sessions.map(s => s.started_at.split('T')[0])
   );
   let streak = 0;
-  let tokensUsed = 0;
-  let d = new Date();
+  const d = new Date();
   while (true) {
     const key = d.toISOString().split('T')[0];
     if (activeDates.has(key)) {
-      streak++;
-    } else if (tokensUsed < maxTokens) {
-      tokensUsed++; // auto-consume
       streak++;
     } else {
       break;
     }
     d.setDate(d.getDate() - 1);
   }
-  return { streak, tokensUsed };
+  return streak;
 }
+```
+
+### 2.2 Grace Token Streak Protection
+
+Using a Grace Token does **not** break the streak. If a session transitions to `guillotined` and the user burns a token to reach `saved_by_grace`, the day still counts as active.
+
+| Session Status | Counts Toward Streak? |
+|---------------|----------------------|
+| `completed` | ✅ Yes |
+| `saved_by_grace` | ✅ Yes (token was used) |
+| `guillotined` | ❌ No (user gave up or token exhausted) |
+| `active` | ❌ No (session in progress / incomplete) |
+
+### 2.3 UI Reflection
+
+The StreakCalendar component highlights:
+- **Solid gold** (`bg-champagne text-deep-slate`): Days with at least one completed/saved_by_grace session
+- **Muted active** (`bg-champagne/15 text-champagne`): Today (if no session yet today)
+- **Dark** (`bg-deep-slate text-stone-600`): Days with no session
+
+### 2.4 Streak Reset
+
+Streak resets to 0 when:
+- The `giveUp()` action is called
+- A full calendar day passes with zero completed sessions AND the user has no Grace Tokens remaining
+
+---
+
+## 3. Focus Score
+
+### 3.1 Formula
+
+A per-session quality metric combining writing velocity and target achievement, penalized by guillotine events:
+
+```
+focusScore = (wpm / 40) * 50 + targetRatio * 50 - guillotinePenalty * 100
+```
+
+Where:
+- **wpm** = `words_written / (duration_seconds / 60)`
+- **targetRatio** = `min(1, words_written / target_words)`
+- **guillotinePenalty** = `0.3` if `guillotine_triggered`, else `0`
+- **Clamp**: `max(0, min(100, result))`
+
+### 3.2 Interpretation
+
+| Score Range | Label | Colour |
+|-------------|-------|--------|
+| 80–100 | Deep Flow | `#1D9E75` (emerald) |
+| 50–79 | Steady | `#EF9F27` (champagne) |
+| 20–49 | Rough | `#E24B4A` (danger) |
+| 0–19 | Guillotined | `#A32D2D` (danger dark) |
+
+### 3.3 Display
+
+Shown as a stat card when tapping a session row in the history list:
+```
+┌─────────────────────────────────┐
+│  Focus Score     WPM     Target │
+│      72          18       84%   │
+└─────────────────────────────────┘
 ```
 
 ---
 
-## 3. ASO Metadata — Keyword Clusters
+## 4. Supabase Query Patterns
 
-Headers and labels in the history view reinforce Play Store search keywords.
+### 4.1 Session List (Last 50)
 
-| Cluster | Keywords | Used In |
-|---------|----------|---------|
-| **Focus Timer** | "focus timer, deep work timer, flow state" | History page title, Focus Score labels |
-| **ADHD Writing** | "ADHD writing app, writing timer for ADHD" | Session header, streak calendar subtitle |
-| **Pomodoro** | "Pomodoro writing, ADHD pomodoro" | Session duration labels, WPM display |
+```js
+const { data, error } = await supabase
+  .from('writing_sessions')
+  .select('*')
+  .order('started_at', { ascending: false })
+  .limit(50);
+```
 
-### 3.1 UI Header Copy Guidelines
+### 4.2 Daily Aggregate (30-Day Trend)
 
-- Page title: **"Flow History — Focus Timer Analytics"**
-- Streak section: **"Focus Streak — ADHD Writing Consistency"**
-- Chart heading: **"Word Count Trend — Deep Work Timer"**
-- Session card subtitle: **"Pomodoro Session · WPM Analysis"**
+```js
+const { data, error } = await supabase
+  .from('writing_sessions')
+  .select('started_at, words_written, guillotine_triggered, status')
+  .gte('started_at', new Date(Date.now() - 30 * 86400000).toISOString())
+  .in('status', ['completed', 'saved_by_grace', 'guillotined'])
+  .order('started_at', { ascending: true });
+```
+
+### 4.3 Caching Strategy
+
+- **localStorage** key: `deepflow_session_history`
+- Written after every successful fetch
+- Served on next load while the network request is in flight (stale-while-revalidate)
+- Cleared on sign-out
 
 ---
 
-*Document version: 1.0 — Phase 5 Expansion (P2)*
+*Document version: 1.0 — Phase 5.2 Session History Protocol*

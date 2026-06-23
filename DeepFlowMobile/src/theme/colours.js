@@ -11,6 +11,8 @@ export const light = {
   textMuted: '#B4B2A9',
   textDisabled: '#D3D1C7',
 
+  accentGold: '#BA7517',
+  accentGoldText: '#633806',
   accentAmber: '#BA7517',
   accentAmberDark: '#854F0B',
   accentAmberText: '#633806',
@@ -23,6 +25,7 @@ export const light = {
   stateDangerBg: '#FCEBEB',
   stateDangerText: '#791F1F',
   stateDangerDark: '#A32D2D',
+  stateDangerMuted: '#E24B4A80',
 
   borderSubtle: '#E8E3D8',
   borderMedium: '#D3D1C7',
@@ -41,6 +44,8 @@ export const dark = {
   textMuted: '#5F5E5A',
   textDisabled: '#2a2510',
 
+  accentGold: '#EF9F27',
+  accentGoldText: '#412402',
   accentAmber: '#EF9F27',
   accentAmberDark: '#C9A84C',
   accentAmberText: '#412402',
@@ -53,6 +58,7 @@ export const dark = {
   stateDangerBg: '#2a1010',
   stateDangerText: '#E24B4A',
   stateDangerDark: '#A32D2D',
+  stateDangerMuted: '#E24B4A80',
 
   borderSubtle: '#1e1a0e',
   borderMedium: '#2a2510',

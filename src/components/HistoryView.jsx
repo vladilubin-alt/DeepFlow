@@ -58,7 +58,7 @@ export default function HistoryView() {
           <h2 className="text-xs text-slate-heading font-sans uppercase tracking-widest mb-4">
             Focus Streak
           </h2>
-          <StreakCalendar streak={streak} />
+          <StreakCalendar streak={streak} sessions={sessions} />
         </div>
 
         <div className="glass-panel rounded-[2rem] p-5 md:col-span-2">
