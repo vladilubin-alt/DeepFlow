@@ -119,7 +119,7 @@ export class DeepFlowSession {
     this.timer.keystroke();
 
     // Save draft locally (debounced sync to Supabase)
-    this.sync.saveDraftLocally(this._sessionId, fullText, wordCount);
+    this.sync.saveDraftLocally(this._sessionId, this._userId, fullText, wordCount);
   }
 
   /** Spend a grace token to rescue a guillotined session. */

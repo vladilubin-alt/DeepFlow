@@ -37,6 +37,7 @@ export class SyncService {
     this._status = SYNC_STATUS.IDLE;
     this._listeners = new Set();
     this._debounceTimer = null;
+    this._errorClearTimer = null; // auto-clear error after timeout
     this._authToken = null; // set after user login
   }
 
@@ -67,6 +68,17 @@ export class SyncService {
   _setStatus(s) {
     this._status = s;
     this._listeners.forEach((fn) => fn(s));
+
+    // Auto-clear ERROR status after 8 seconds so the indicator never gets stuck
+    if (this._errorClearTimer) {
+      clearTimeout(this._errorClearTimer);
+      this._errorClearTimer = null;
+    }
+    if (s === SYNC_STATUS.ERROR) {
+      this._errorClearTimer = setTimeout(() => {
+        this._setStatus(SYNC_STATUS.IDLE);
+      }, 8_000);
+    }
   }
 
   // ── Local Draft Persistence ──────────────────────────────────
@@ -74,12 +86,14 @@ export class SyncService {
   /**
    * Save draft content locally and schedule a debounced remote sync.
    * @param {string} sessionId
+   * @param {string|null} userId — required for Supabase RLS/NOT NULL constraint
    * @param {string} content
    * @param {number} wordCount
    */
-  saveDraftLocally(sessionId, content, wordCount) {
+  saveDraftLocally(sessionId, userId, content, wordCount) {
     const draft = {
       sessionId,
+      userId,
       content,
       wordCount,
       updatedAt: new Date().toISOString(),
@@ -160,6 +174,7 @@ export class SyncService {
     const payload = {
       id: this._uuidFromSession(sessionId),
       session_id: sessionId,
+      user_id: draft.userId,
       content: draft.content,
       word_count: draft.wordCount,
       updated_at: draft.updatedAt,
@@ -273,6 +288,7 @@ export class SyncService {
 
   destroy() {
     if (this._debounceTimer) clearTimeout(this._debounceTimer);
+    if (this._errorClearTimer) clearTimeout(this._errorClearTimer);
     this._listeners.clear();
   }
 }
