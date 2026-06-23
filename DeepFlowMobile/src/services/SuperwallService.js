@@ -1,8 +1,8 @@
 import Purchases from 'react-native-purchases';
 import { Platform } from 'react-native';
 
-const SUPERWALL_API_KEY = 'pk_juRmfRkHQLkLPY7CiDMiGPsC60Yf';
-const REVENUECAT_API_KEY = 'placeholder_revenuecat_api_key';
+const SUPERWALL_API_KEY = 'pk_juRmfKDHkdolpM3z8Y7Ci';
+const REVENUECAT_API_KEY = 'sk_XuQakZoBcHjRxMdUSCwZtuDRjoUYH';
 
 let initialized = false;
 
