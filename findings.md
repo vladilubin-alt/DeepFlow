@@ -19,6 +19,16 @@
 - **Netlify CI/CD**: Site `gleeful-liger-6f788b` linked to GitHub — pushes to `main` auto-trigger production builds.
 - **Deploy Config**: `netlify.toml` — `npm run build` + `dist/` publish + SPA redirect `/* → /index.html`.
 
+## Mobile Build Environment
+- **JDK**: `.tmp/jdk21/Contents/Home` (Temurin 21.0.6 LTS, downloaded from Adoptium)
+- **Android SDK**: `~/Library/Android/sdk`
+- **SDK Platforms**: `android-34` installed via `sdkmanager`
+- **Build Tools**: `34.0.0` installed via `sdkmanager`
+- **Gradle**: 8.14.3 (wrapped in `android/gradlew`)
+- **Debug APK**: `android/app/build/outputs/apk/debug/app-debug.apk` (4.1MB)
+- **Capacitor**: v7, with splash-screen and StatusBar plugins
+- **Build Command**: See `architecture/mobile_release_protocol.md`
+
 ## Recovery Vault
 - **Component**: `src/components/VaultModal.jsx` — queries `graveyard` via Supabase client with RLS `auth.uid()`.
 - **Trigger**: "Vault ◆" button in Header opens modal.
