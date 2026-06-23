@@ -29,10 +29,11 @@
 - [ ] Track: session start, guillotine, grace token use, recovery
 - [ ] Dashboard for funnel analysis
 
-### P5 — Revenue (Stripe / RevenueCat)
-- [ ] Wire Stripe webhook + RevenueCat SDK
+### P5 — Revenue (Google Play Billing)
+- [ ] Implement Google Play Billing Library for in-app purchases
 - [ ] Premium feature gate: extra Grace Tokens, extended graveyard retention
 - [ ] Subscription tier model documentation
+- [ ] Test with Google Play Console license testing
 
 ---
 
