@@ -19,6 +19,29 @@ DeepFlow is an ADHD-focused writing timer designed to help users enter and maint
   - File access: Capacitor WebView uses `http://localhost` — no CORS issues for Supabase REST calls.
   - Deep links (future): Register custom URL scheme `deepflow://` for OAuth callback redirects.
 
+## Integrations
+
+### RevenueCat (Purchase Controller)
+- **Role**: Single source of truth for in-app purchases and entitlements (Grace Token packs, extended graveyard retention, subscription tiers).
+- **Architecture**: Superwall uses RevenueCat as the underlying purchase controller — all paywall events are routed through RevenueCat for receipt validation and entitlement state.
+- **Platform**: Google Play Billing (Android), App Store Connect (iOS — future).
+
+### Superwall (Paywall & Onboarding A/B)
+- **Role**: A/B test onboarding flows and paywall triggers without app store submissions.
+- **Onboarding Schema**: Users are bucketed into one of three 'Flares' via a Superwall-triggered quiz on initial launch:
+  1. **Time Warp** — Users who lose track of time. Timer-dominant UI, emphasis on session duration and streaks.
+  2. **Task Freeze** — Users who struggle to start. AI coach-dominant UI, emphasis on nudge prompts and grace tokens.
+  3. **Decision Fog** — Users overwhelmed by choices. Simplified Setup, minimal controls, opinionated presets.
+- **Trigger Logic**:
+  - Trigger 1: Initial app launch → Flare Quiz
+  - Trigger 2: Post-session "Focus Report" → Value demonstration
+  - Trigger 3: Attempting to use a locked 4th Grace Token → Paywall
+- **Dependency**: `@superwall/react-native-core` (React Native) / Superwall Web SDK (Capacitor web wrapper).
+
+### Mixpanel (Product Analytics)
+- **Role**: Event tracking for funnels — session start, guillotine, grace token use, vault recovery.
+- **Status**: Placeholder token in `.env`, not yet wired.
+
 ## Security Policy (80/20 Rule)
 - **Row Level Security (RLS)**: Enforced on all tables ("User A can only see User A's data").
 - **Secret Management**: API keys and secrets strictly referenced via `.env` imports only.

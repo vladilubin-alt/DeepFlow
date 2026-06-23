@@ -32,6 +32,15 @@
 - [ ] Track: session start, guillotine, grace token use, recovery
 - [ ] Dashboard for funnel analysis
 
+### P2.1 — Superwall Onboarding & A/B Logic
+- [ ] Install Superwall SDK (`@superwall/react-native-core` / Capacitor web equivalent)
+- [ ] Create `architecture/onboarding_experiment_protocol.md` with trigger logic
+- [ ] Wire Trigger 1: Initial launch → Flare Quiz (Time Warp / Task Freeze / Decision Fog)
+- [ ] Wire Trigger 2: Post-session "Focus Report" value demonstration
+- [ ] Wire Trigger 3: Locked 4th Grace Token → paywall
+- [ ] Configure Superwall to use RevenueCat as purchase controller
+- [ ] Documented in `architecture/onboarding_experiment_protocol.md`
+
 ### P5 — Revenue (Google Play Billing)
 - [ ] Implement Google Play Billing Library for in-app purchases
 - [ ] Premium feature gate: extra Grace Tokens, extended graveyard retention
