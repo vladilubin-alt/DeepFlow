@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { useDeepFlowSession } from './hooks/useDeepFlowSession';
 import { useGraveyard } from './hooks/useGraveyard';
@@ -10,6 +11,7 @@ import FlowOrb from './components/FlowOrb';
 import SessionSetup from './components/SessionSetup';
 import SensoryLayer from './components/SensoryLayer';
 import VaultModal from './components/VaultModal';
+import HistoryView from './components/HistoryView';
 
 export default function App() {
   const {
@@ -137,71 +139,76 @@ export default function App() {
   const isRunning = sessionState !== STATES.IDLE;
 
   return (
-    <div className="min-h-screen noise-overlay flex flex-col justify-between p-3 md:p-8 max-w-7xl mx-auto">
+    <Routes>
+      <Route path="/history" element={<HistoryView />} />
+      <Route path="/" element={
+        <div className="min-h-screen noise-overlay flex flex-col justify-between p-3 md:p-8 max-w-7xl mx-auto">
 
-      <Header syncStatus={syncStatus} onOpenVault={handleOpenVault} />
+          <Header syncStatus={syncStatus} onOpenVault={handleOpenVault} />
 
-      <main className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6 items-stretch flex-grow">
+          <main className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6 items-stretch flex-grow">
 
-        <div className="order-1 lg:col-span-3">
-          <WritingArena
-            state={sessionState}
-            text={text}
-            onChange={handleTextChange}
-            timerData={timerData}
-            wordCount={wordCount}
-            wordTarget={wordTarget}
-            graceTokens={graceTokens}
-            onUseGraceToken={handleUseGraceToken}
-            onGiveUp={handleGiveUp}
-            onReset={handleReset}
+            <div className="order-1 lg:col-span-3">
+              <WritingArena
+                state={sessionState}
+                text={text}
+                onChange={handleTextChange}
+                timerData={timerData}
+                wordCount={wordCount}
+                wordTarget={wordTarget}
+                graceTokens={graceTokens}
+                onUseGraceToken={handleUseGraceToken}
+                onGiveUp={handleGiveUp}
+                onReset={handleReset}
+              />
+            </div>
+
+            <div className="order-2 lg:col-span-2 flex flex-col gap-4 md:gap-6">
+              <div className="order-1 md:order-1">
+                <FlowOrb state={sessionState} velocity={velocity} />
+              </div>
+
+              <div className="order-3 md:order-2">
+                <SensoryLayer
+                  frequency={frequency}
+                  onFrequencyChange={handleFrequencyChange}
+                  isMuted={isMuted}
+                  onMuteToggle={handleMuteToggle}
+                />
+              </div>
+
+              <div className="order-2 md:order-3 sticky bottom-0 md:static">
+                <SessionSetup
+                  duration={duration}
+                  onDurationChange={setDuration}
+                  wordTarget={wordTarget}
+                  onTargetChange={setWordTarget}
+                  onStart={handleStart}
+                  isRunning={isRunning}
+                  sessionState={sessionState}
+                  graceTokens={graceTokens}
+                  streak={streak}
+                />
+              </div>
+            </div>
+          </main>
+
+          <VaultModal
+            open={vaultOpen}
+            onClose={handleCloseVault}
+            entries={entries}
+            loading={loading}
+            error={vaultError}
+            onRefresh={fetchEntries}
+            onRecover={handleRecover}
           />
+
+          <footer className="mt-6 md:mt-8 pt-4 border-t border-slate-gray/40 flex justify-between items-center text-stone-500 text-xxs font-mono-custom">
+            <span>DeepFlow ADHD Writing Instrument © 2026</span>
+            <span>v0.4.0 (Phase 4 — Refined)</span>
+          </footer>
         </div>
-
-        <div className="order-2 lg:col-span-2 flex flex-col gap-4 md:gap-6">
-          <div className="order-1 md:order-1">
-            <FlowOrb state={sessionState} velocity={velocity} />
-          </div>
-
-          <div className="order-3 md:order-2">
-            <SensoryLayer
-              frequency={frequency}
-              onFrequencyChange={handleFrequencyChange}
-              isMuted={isMuted}
-              onMuteToggle={handleMuteToggle}
-            />
-          </div>
-
-          <div className="order-2 md:order-3 sticky bottom-0 md:static">
-            <SessionSetup
-              duration={duration}
-              onDurationChange={setDuration}
-              wordTarget={wordTarget}
-              onTargetChange={setWordTarget}
-              onStart={handleStart}
-              isRunning={isRunning}
-              sessionState={sessionState}
-              graceTokens={graceTokens}
-              streak={streak}
-            />
-          </div>
-        </div>
-      </main>
-
-      <VaultModal
-        open={vaultOpen}
-        onClose={handleCloseVault}
-        entries={entries}
-        loading={loading}
-        error={vaultError}
-        onRefresh={fetchEntries}
-        onRecover={handleRecover}
-      />
-
-      <footer className="mt-6 md:mt-8 pt-4 border-t border-slate-gray/40 flex justify-between items-center text-stone-500 text-xxs font-mono-custom">
-        <span>DeepFlow ADHD Writing Instrument © 2026</span>
-        <span>v0.4.0 (Phase 4 — Refined)</span>
-      </footer>
-    </div>
+      } />
+    </Routes>
   );
 }

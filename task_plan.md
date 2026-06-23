@@ -2,21 +2,24 @@
 
 ## Priority Queue (Mobile Release & Marketplace)
 
-### P1 — Mobile Wrapper (Capacitor)
-- [ ] Install `@capacitor/core` + `@capacitor/cli`
-- [ ] `npx cap init` (app name: "DeepFlow", app ID: "com.deepflow.app")
-- [ ] `npx cap add android`
-- [ ] Install Android SDK + JDK 17 (prerequisite)
-- [ ] Build APK: `npx cap sync && npx cap open android`
-- [ ] Configure `capacitor.config.ts` with safe-area insets, status bar, splash screen
+### P1 — Mobile Wrapper (Capacitor) — ✅ Complete
+- [x] Install `@capacitor/core` + `@capacitor/cli`
+- [x] `npx cap init` (app name: "DeepFlow", app ID: "com.deepflow.app")
+- [x] `npx cap add android`
+- [x] Install Android SDK + JDK 21 (prerequisite)
+- [x] Build APK: `npm run build && npx cap sync android && cd android && ./gradlew assembleDebug`
+- [x] Configure `capacitor.config.json` with safe-area insets, status bar, splash screen
 - [ ] Test on Android emulator / physical device
 - [ ] iOS: Requires macOS Xcode + `npx cap add ios`
 
-### P2 — Session History Dashboard
-- [ ] Create `/history` view querying `writing_sessions` table
-- [ ] Streak calendar (GitHub-style contribution graph)
-- [ ] Word count trends over time
-- [ ] Guillotine rate analytics (optional)
+### P2 — Session History Dashboard — [/] In Progress
+- [x] Create `architecture/session_history_protocol.md` with data fetching, Focus Score, streak logic
+- [x] Install react-router-dom + recharts
+- [x] Create `/history` route with `HistoryView` component
+- [x] Streak calendar (Bento grid style) via `StreakCalendar` component
+- [x] Word count trend chart via `WordCountChart` (Recharts AreaChart)
+- [x] Focus Score per session (WPM variance + target completion)
+- [ ] Generate signed APK for Play Store
 
 ### P3 — Auth Upgrade (OAuth)
 - [ ] Add Google/Apple OAuth login

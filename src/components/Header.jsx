@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function syncLabel(status) {
   switch (status) {
@@ -21,14 +22,36 @@ function syncDotColor(status) {
 }
 
 export default function Header({ syncStatus, onOpenVault }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isHistory = location.pathname === '/history';
+
   return (
     <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-      <div>
-        <h1 className="text-3xl md:text-4xl text-champagne font-serif italic tracking-wide">DeepFlow</h1>
-        <p className="text-xs text-stone-400 font-sans mt-0.5 uppercase tracking-widest">ADHD Writing Instrument</p>
+      <div className="flex items-center gap-4">
+        {isHistory ? (
+          <div>
+            <h1 className="text-3xl md:text-4xl text-champagne font-serif italic tracking-wide">DeepFlow</h1>
+            <p className="text-xs text-stone-400 font-sans mt-0.5 uppercase tracking-widest">ADHD Writing Instrument</p>
+          </div>
+        ) : (
+          <div>
+            <h1 className="text-3xl md:text-4xl text-champagne font-serif italic tracking-wide">DeepFlow</h1>
+            <p className="text-xs text-stone-400 font-sans mt-0.5 uppercase tracking-widest">ADHD Writing Instrument</p>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-3">
+        {!isHistory && (
+          <button
+            onClick={() => navigate('/history')}
+            className="magnetic-btn px-4 py-2 rounded-full text-xs font-mono-custom bg-deep-slate border border-slate-gray/60 text-stone-400 hover:text-champagne hover:border-champagne/40 transition"
+          >
+            History ◆
+          </button>
+        )}
+
         <button
           onClick={onOpenVault}
           className="magnetic-btn px-4 py-2 rounded-full text-xs font-mono-custom bg-deep-slate border border-slate-gray/60 text-stone-400 hover:text-champagne hover:border-champagne/40 transition"
