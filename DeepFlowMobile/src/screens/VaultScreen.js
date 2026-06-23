@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
+import { triggerGraceTokenPaywall } from '../services/SuperwallService';
 
 const MOCK_VAULT = [
   { id: '1', title: 'Untitled draft', failedAt: new Date(Date.now() - 30 * 60 * 1000), wordCount: 145, recovered: false },
@@ -9,14 +10,6 @@ const MOCK_VAULT = [
   { id: '3', title: 'Project notes', failedAt: new Date(Date.now() - 10 * 24 * 3600 * 1000), wordCount: 89, recovered: false },
   { id: '4', title: 'Old draft', failedAt: new Date(Date.now() - 40 * 24 * 3600 * 1000), wordCount: 500, recovered: false },
 ];
-
-function costInfo(failedAt) {
-  const hoursAgo = (Date.now() - failedAt.getTime()) / 3600000;
-  if (hoursAgo < 1) return { badge: '50 tokens', colour: colours.stateSuccess, label: 'Free' };
-  if (hoursAgo < 168) return { badge: '$0.99', colour: colours.accentGold, label: 'Micro' };
-  if (hoursAgo < 720) return { badge: '$1.99', colour: colours.stateDangerMuted, label: 'Paid' };
-  return { badge: 'gone', colour: '#2a2510', label: 'Expired' };
-}
 
 function timeAgo(date) {
   const hours = Math.floor((Date.now() - date.getTime()) / 3600000);
@@ -29,9 +22,30 @@ function timeAgo(date) {
 export default function VaultScreen() {
   const { colours } = useTheme();
   const [vault, setVault] = useState(MOCK_VAULT);
+  const [graceTokens, setGraceTokens] = useState(3);
+
+  function costInfo(failedAt) {
+    const hoursAgo = (Date.now() - failedAt.getTime()) / 3600000;
+    if (hoursAgo < 1) return { badge: '50 tokens', colour: colours.stateSuccess, label: 'paid' };
+    if (hoursAgo < 168) return { badge: '$0.99', colour: colours.accentGold, label: 'paid' };
+    if (hoursAgo < 720) return { badge: '$1.99', colour: colours.stateDangerMuted, label: 'paid' };
+    return { badge: 'gone', colour: '#2a2510', label: 'expired' };
+  }
 
   const handleRecover = (id) => {
-    setVault((prev) => prev.map((item) => item.id === id ? { ...item, recovered: true } : item));
+    const item = vault.find((v) => v.id === id);
+    if (!item || item.recovered) return;
+    const cost = costInfo(item.failedAt);
+    if (cost.label === 'expired') return;
+    if (graceTokens > 0) {
+      setGraceTokens((t) => t - 1);
+      setVault((prev) => prev.map((v) => v.id === id ? { ...v, recovered: true } : v));
+    } else {
+      triggerGraceTokenPaywall(() => {
+        setGraceTokens((t) => t + 3);
+        setVault((prev) => prev.map((v) => v.id === id ? { ...v, recovered: true } : v));
+      });
+    }
   };
 
   return (
@@ -50,7 +64,7 @@ export default function VaultScreen() {
             <TouchableOpacity
               key={item.id}
               onPress={() => handleRecover(item.id)}
-              disabled={item.recovered || cost.label === 'Expired'}
+              disabled={item.recovered || cost.label === 'expired'}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -58,7 +72,7 @@ export default function VaultScreen() {
                 borderRadius: 8,
                 padding: 12,
                 marginBottom: 6,
-                opacity: cost.label === 'Expired' ? 0.4 : 1,
+                opacity: cost.label === 'expired' ? 0.4 : 1,
               }}
             >
               <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: dotColour, marginRight: 10 }} />
@@ -82,6 +96,9 @@ export default function VaultScreen() {
           );
         })}
 
+        <Text style={{ fontSize: 9, color: colours.textMuted, textAlign: 'center', marginTop: 16 }}>
+          {graceTokens} grace tokens remaining
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,23 +1,89 @@
+import Purchases from 'react-native-purchases';
 import { Platform } from 'react-native';
 
 const SUPERWALL_API_KEY = 'pk_juRmfRkHQLkLPY7CiDMiGPsC60Yf';
+const REVENUECAT_API_KEY = 'placeholder_revenuecat_api_key';
 
 let initialized = false;
+
+async function initRevenueCat() {
+  try {
+    await Purchases.configure({ apiKey: REVENUECAT_API_KEY });
+    console.log('[RevenueCat] Initialized');
+  } catch (e) {
+    console.warn('[RevenueCat] Init failed:', e.message);
+  }
+}
+
+function createPurchaseController() {
+  return {
+    async purchaseFromAppStore(productId) {
+      try {
+        const { customerInfo } = await Purchases.purchaseProduct(productId);
+        if (customerInfo.entitlements.active.length > 0) {
+          return { type: 'purchased', toJSON() { return { type: 'purchased' }; } };
+        }
+        return { type: 'cancelled', toJSON() { return { type: 'cancelled' }; } };
+      } catch (e) {
+        if (e.userCancelled) {
+          return { type: 'cancelled', toJSON() { return { type: 'cancelled' }; } };
+        }
+        return { type: 'failed', error: e.message, toJSON() { return { type: 'failed', error: e.message }; } };
+      }
+    },
+    async purchaseFromGooglePlay(productId, basePlanId, offerId) {
+      try {
+        const { customerInfo } = await Purchases.purchaseProduct(productId, null, basePlanId);
+        if (customerInfo.entitlements.active.length > 0) {
+          return { type: 'purchased', toJSON() { return { type: 'purchased' }; } };
+        }
+        return { type: 'cancelled', toJSON() { return { type: 'cancelled' }; } };
+      } catch (e) {
+        if (e.userCancelled) {
+          return { type: 'cancelled', toJSON() { return { type: 'cancelled' }; } };
+        }
+        return { type: 'failed', error: e.message, toJSON() { return { type: 'failed', error: e.message }; } };
+      }
+    },
+    async restorePurchases() {
+      try {
+        const { customerInfo } = await Purchases.restorePurchases();
+        return {
+          toJson() { return { result: 'restored' }; },
+        };
+      } catch (e) {
+        return {
+          toJson() { return { result: 'failed', errorMessage: e.message }; },
+        };
+      }
+    },
+  };
+}
 
 export async function initSuperwall() {
   if (initialized) return;
   try {
+    await initRevenueCat();
     const Superwall = require('@superwall/react-native-superwall').default;
     await Superwall.configure({
       apiKey: SUPERWALL_API_KEY,
+      purchaseController: createPurchaseController(),
       options: {
         shouldPreload: true,
       },
     });
     initialized = true;
-    console.log('[Superwall] Initialized');
+    Purchases.addCustomerInfoUpdateListener((customerInfo) => {
+      const hasExtraTokens = customerInfo.entitlements.active['extra_grace_tokens']?.isActive === true;
+      Superwall.shared.setSubscriptionStatus(
+        hasExtraTokens
+          ? { type: 'active', toJSON() { return { type: 'active' }; } }
+          : { type: 'inactive', toJSON() { return { type: 'inactive' }; } }
+      );
+    });
+    console.log('[Superwall] Configured with RevenueCat purchase controller');
   } catch (e) {
-    console.warn('[Superwall] Init failed (native not linked):', e.message);
+    console.warn('[Superwall] Init failed:', e.message);
   }
 }
 
