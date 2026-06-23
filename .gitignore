@@ -38,5 +38,12 @@ captures/
 *.apk
 *.apks
 
+# Netlify local state
+.netlify/
+
+# Screenshots and local media
+*.png
+*.screenshot.*
+
 # OS files
 .DS_Store

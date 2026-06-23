@@ -49,3 +49,44 @@ All synchronization tables must enforce strict RLS to isolate user data.
 - **Writing Sessions Table**: Users can view, insert, and update only sessions where `auth.uid() = user_id`.
 - **Drafts Table**: Users can view, insert, update, and delete only drafts where `auth.uid() = user_id`.
 - **Graveyard Table**: Users can insert only their own records, and query them only during an active authorized recovery phase.
+
+---
+
+## 4. Anonymous Auth Flow
+
+The client must obtain an authenticated Supabase session before any RLS-protected writes can succeed. Since DeepFlow does not require a traditional sign-up, it uses Supabase Anonymous Auth (`signInAnonymously()`) to provision a stable `auth.uid()` for each device.
+
+### 4.1 App Mount Handshake
+
+```mermaid
+sequenceDiagram
+    participant App as App Mount
+    participant Supabase as Supabase Auth
+    participant Session as DeepFlowSession
+    participant Sync as SyncService
+
+    App->>Supabase: signInAnonymously()
+    Supabase-->>App: { user, session }
+    App->>Sync: setAuthToken(session.access_token)
+    App->>Session: start(user.id)
+    Note over Session,Sync: All subsequent REST API calls<br/>use Bearer {access_token}
+    Note over Supabase: RLS: auth.uid() = user_id
+```
+
+### 4.2 Implementation Rules
+
+1. **Timing**: `signInAnonymously()` fires once on application mount (in `App.jsx` root effect), before any session can be started.
+2. **Token Propagation**: The returned `session.access_token` is passed to `SyncService.setAuthToken()` so every Supabase REST request includes `Authorization: Bearer <access_token>` instead of the anon key.
+3. **User ID Propagation**: The `user.id` (a UUID) replaces the placeholder `'local'` string in `DeepFlowSession.start()`.
+4. **Session Persistence**: Supabase stores the anonymous session in `localStorage`, so returning users keep the same `auth.uid()` across page reloads — preserving their RLS identity and profile data.
+5. **RLS Enforcement**: Every table policy checks `auth.uid() = user_id`. Without an authenticated session, all writes return 401/403 and silently fail (logged as errors). The Graveyard table additionally has a FK constraint referencing `profiles(id)`, so a profile must exist (auto-created by the `handle_new_user` trigger on `auth.users` insert).
+
+### 4.3 Auth State Lifecycle
+
+| Phase | Action | RLS Outcome |
+|-------|--------|-------------|
+| App mount | `signInAnonymously()` | `auth.uid()` available |
+| Session start | `start(user.id)` | All writes pass RLS |
+| Guillotine | `saveToGraveyard()` | Insert succeeds (auth.uid() = user_id) |
+| Page reload | Supabase restores session from localStorage | `auth.uid()` restored |
+| Clear data / incognito | New anonymous session created | New user, new RLS identity |

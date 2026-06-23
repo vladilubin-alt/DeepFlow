@@ -87,6 +87,14 @@ export class DeepFlowSession {
 
   // ── Public API ───────────────────────────────────────────────
 
+  /** Set authenticated user identity and JWT for Supabase RLS. */
+  setAuth(userId, accessToken) {
+    this._userId = userId;
+    if (accessToken) {
+      this.sync.setAuthToken(accessToken);
+    }
+  }
+
   /** Start a new writing session. */
   start(userId) {
     this._userId = userId;

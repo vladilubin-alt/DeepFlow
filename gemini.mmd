@@ -86,3 +86,49 @@ Stores primary text data to prevent catastrophic loss when crashes occur.
   "required": ["id", "session_id", "user_id", "content", "word_count", "created_at", "updated_at"]
 }
 ```
+
+---
+
+## Keystroke Validator — Heuristics Reference
+
+**File:** `src/utils/keystrokeValidator.js`
+
+The validator gates all keystroke events before they reach the session timer. If any heuristic rejects the text, the keystroke is silently dropped and the idle timer is **not** reset — preventing spam from gaming the system.
+
+### Heuristic 1 — Keyboard Walking (Spam Detection)
+Detects consecutive characters typed by dragging a finger across a QWERTY keyboard row.
+- **Input:** Any word ≥ 5 characters.
+- **Method:** Builds an adjacency map from three QWERTY rows (`qwertyuiop`, `asdfghjkl`, `zxcvbnm`). If a sequence of ≥5 characters are all adjacent on the same row, the word is rejected.
+- **False Positives:** Common passwords like "qwerty", "asdfgh", "zxcvbn" are correctly rejected.
+- **Tuning:** Change `minLength` param (currently 5) in `isKeyboardWalk()` to adjust sensitivity.
+
+### Heuristic 2 — Character Repetition
+Detects long runs of the same character (e.g. `aaaaaaa`, `......`, `1111111`).
+- **Input:** Any word ≥ 5 characters.
+- **Method:** Strip to alphanumeric, count unique characters — if exactly 1, reject.
+- **Tuning:** The minimum word length (5) can be increased for leniency with intentional patterns like "nooooo".
+
+### Heuristic 3 — Lexical Structure
+Detects gibberish by analyzing vowel/consonant ratios and clusters.
+- **No Vowels:** Any word ≥ 4 letters with zero vowels (`aeiouy`) → reject.
+- **All Vowels:** Any word > 4 letters with zero consonants → reject.
+- **Consonant Cluster:** ≥ 6 consecutive consonants → reject (e.g. `sdfghj`).
+- **Vowel Cluster:** ≥ 5 consecutive vowels → reject (e.g. `aeioua`).
+- **Tuning:** Adjust threshold constants (6 for consonants, 5 for vowels) or the vowel set (remove `y` for strict mode).
+
+### Boundary Rules
+- **Empty/whitespace-only** text → rejected.
+- **Extremely long tokens** (> 25 chars after stripping punctuation) → rejected.
+- **Only valid keystrokes** pass through to `DeepFlowSession.keystroke()`.
+
+---
+
+## Maintenance Log
+
+| Date | Version | Change | Author |
+|------|---------|--------|--------|
+| 2026-06-22 | v0.4.0 | Phase 4 initial deploy (Midnight Luxe refinement, GSAP orb, binaural audio, mobile layout) | DeepFlow |
+| 2026-06-22 | v0.4.1 | Anonymous Auth Flow: `signInAnonymously()` handshake, `setAuth()` propagation to SyncService | DeepFlow |
+| 2026-06-22 | v0.4.1 | Keystroke Validation Gate: ported heuristics from `validate_keystrokes.py` to `src/utils/keystrokeValidator.js` | DeepFlow |
+| 2026-06-22 | v0.4.1 | Emergency Recovery SOP: `architecture/emergency_recovery.md` with Graveyard manual access steps | DeepFlow |
+| 2026-06-22 | v0.4.1 | Netlify deploy: `netlify.toml` config, anonymous deploy to `bright-raindrop-13667d.netlify.app` | DeepFlow |
