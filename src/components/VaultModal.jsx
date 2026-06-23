@@ -16,6 +16,7 @@ export default function VaultModal({
   error,
   onRefresh,
   onRecover,
+  graceTokens = 0,
 }) {
   useEffect(() => {
     if (open) onRefresh();
@@ -77,12 +78,18 @@ export default function VaultModal({
                 {entry.content || '—'}
               </p>
               {entry === entries[0] && (
-                <button
-                  onClick={() => onRecover(entry)}
-                  className="magnetic-btn mt-2 w-full px-4 py-2 rounded-xl bg-champagne text-obsidian font-medium hover:brightness-110 font-mono-custom text-xs transition"
-                >
-                  Recover Last Draft
-                </button>
+                graceTokens > 0 ? (
+                  <button
+                    onClick={() => onRecover(entry)}
+                    className="magnetic-btn mt-2 w-full px-4 py-2 rounded-xl bg-champagne text-obsidian font-medium hover:brightness-110 font-mono-custom text-xs transition"
+                  >
+                    Recover Last Draft ({graceTokens} token{graceTokens !== 1 ? 's' : ''} left)
+                  </button>
+                ) : (
+                  <div className="mt-2 w-full px-4 py-2 rounded-xl bg-velvet-crimson/10 text-velvet-crimson font-mono-custom text-xs text-center border border-velvet-crimson/20">
+                    No grace tokens remaining — start a new session to earn more
+                  </div>
+                )
               )}
             </div>
           ))}

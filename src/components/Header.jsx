@@ -29,51 +29,51 @@ export default function Header({ syncStatus, onOpenVault }) {
   const { mode, toggle } = useTheme();
 
   return (
-    <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-      <div className="flex items-center gap-4">
+    <header className="flex flex-row justify-between items-center gap-2 mb-1 sm:mb-6">
+      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
         {isHistory ? (
-          <div>
-            <h1 className="text-3xl md:text-4xl text-champagne font-serif italic tracking-wide">DeepFlow</h1>
-            <p className="text-xs text-stone-400 font-sans mt-0.5 uppercase tracking-widest">ADHD Writing Instrument</p>
+          <div className="flex items-center gap-2 sm:block">
+            <h1 className="text-lg sm:text-3xl md:text-4xl text-champagne font-serif italic tracking-wide shrink-0">DeepFlow</h1>
+            <p className="hidden sm:block text-xs text-stone-400 font-sans mt-0.5 uppercase tracking-widest">ADHD Writing Instrument</p>
           </div>
         ) : (
-          <div>
-            <h1 className="text-3xl md:text-4xl text-champagne font-serif italic tracking-wide">DeepFlow</h1>
-            <p className="text-xs text-stone-400 font-sans mt-0.5 uppercase tracking-widest">ADHD Writing Instrument</p>
+          <div className="flex items-center gap-2 sm:block">
+            <h1 className="text-lg sm:text-3xl md:text-4xl text-champagne font-serif italic tracking-wide shrink-0">DeepFlow</h1>
+            <p className="hidden sm:block text-xs text-stone-400 font-sans mt-0.5 uppercase tracking-widest">ADHD Writing Instrument</p>
           </div>
         )}
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1 sm:gap-3">
         {!isHistory && (
           <button
             onClick={() => navigate('/history')}
-            className="magnetic-btn px-4 py-2 rounded-full text-xs font-mono-custom bg-deep-slate border border-slate-gray/60 text-stone-400 hover:text-champagne hover:border-champagne/40 transition"
+            className="magnetic-btn px-2 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-mono-custom bg-deep-slate border border-slate-gray/60 text-stone-400 hover:text-champagne hover:border-champagne/40 transition"
           >
-            History ◆
+            <span className="hidden sm:inline">History </span>◆
           </button>
         )}
 
         <button
           onClick={onOpenVault}
-          className="magnetic-btn px-4 py-2 rounded-full text-xs font-mono-custom bg-deep-slate border border-slate-gray/60 text-stone-400 hover:text-champagne hover:border-champagne/40 transition"
+          className="magnetic-btn px-2 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-mono-custom bg-deep-slate border border-slate-gray/60 text-stone-400 hover:text-champagne hover:border-champagne/40 transition"
         >
-          Vault ◆
+          <span className="hidden sm:inline">Vault </span>◆
         </button>
 
         <button
           onClick={toggle}
-          className="magnetic-btn px-3 py-2 rounded-full text-xs font-mono-custom bg-deep-slate border border-slate-gray/60 text-stone-400 hover:text-champagne hover:border-champagne/40 transition"
+          className="magnetic-btn px-2 sm:px-3 py-1.5 sm:py-2 rounded-full text-xs font-mono-custom bg-deep-slate border border-slate-gray/60 text-stone-400 hover:text-champagne hover:border-champagne/40 transition"
           title={`Switch to ${mode === 'dark' ? 'light' : 'dark'} theme`}
         >
           {mode === 'dark' ? '☀' : '☾'}
         </button>
 
-        <div className="magnetic-btn flex items-center gap-3 glass-panel px-4 py-2 rounded-full text-xs font-mono-custom cursor-default">
-          <div className={`w-2 h-2 rounded-full ${syncDotColor(syncStatus)}`}></div>
-          <span className="text-stone-300">Supabase: {syncLabel(syncStatus)}</span>
-          <span className="text-stone-500">|</span>
-          <span className="text-champagne">local</span>
+        <div className="magnetic-btn flex items-center gap-1 sm:gap-3 glass-panel px-2 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-mono-custom cursor-default">
+          <div className={`w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full ${syncDotColor(syncStatus)}`}></div>
+          <span className="hidden sm:inline text-stone-300">Supabase: {syncLabel(syncStatus)}</span>
+          <span className="hidden sm:inline text-stone-500">|</span>
+          <span className="hidden sm:inline text-champagne">local</span>
         </div>
       </div>
     </header>

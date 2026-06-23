@@ -14,6 +14,7 @@ import SensoryLayer from './components/SensoryLayer';
 import VaultModal from './components/VaultModal';
 import HistoryView from './components/HistoryView';
 import FlareQuizModal, { isOnboardingComplete, getStoredFlare, FLARE_DEFAULTS } from './components/FlareQuizModal';
+import FocusReportModal from './components/FocusReportModal';
 
 function timeAgo(date) {
   const hours = Math.floor((Date.now() - date.getTime()) / 3600000);
@@ -86,6 +87,8 @@ export default function App() {
   const [isMuted, setIsMuted] = useState(false);
   const [userId, setUserId] = useState(null);
   const [vaultOpen, setVaultOpen] = useState(false);
+  const [showFocusReport, setShowFocusReport] = useState(false);
+  const [reportData, setReportData] = useState(null);
 
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
 
@@ -96,13 +99,27 @@ export default function App() {
       prevStateRef.current = sessionState;
       if (sessionState === 'completed' && prev === 'writing') {
         track('Session Completed', { duration, wordTarget, wordCount });
+        setReportData({
+          wordsWritten: wordCount,
+          targetWords: wordTarget,
+          durationSeconds: timerData.elapsedMs / 1000,
+          guillotined: false,
+        });
+        setShowFocusReport(true);
       } else if (sessionState === 'guillotined') {
         track('Session Guillotined', { duration, wordTarget, wordCount });
+        setReportData({
+          wordsWritten: wordCount,
+          targetWords: wordTarget,
+          durationSeconds: timerData.elapsedMs / 1000,
+          guillotined: true,
+        });
+        setShowFocusReport(true);
       } else if (sessionState === 'saved_by_grace') {
         track('Grace Token Used (auto)', { graceTokens });
       }
     }
-  }, [sessionState, audio, duration, wordTarget, wordCount, graceTokens]);
+  }, [sessionState, audio, duration, wordTarget, wordCount, graceTokens, timerData]);
 
   useEffect(() => {
     supabase.auth.signInAnonymously().then(({ data, error }) => {
@@ -166,6 +183,11 @@ export default function App() {
     setText('');
   }, [reset]);
 
+  const dismissFocusReport = useCallback(() => {
+    setShowFocusReport(false);
+    setReportData(null);
+  }, []);
+
   const handleFrequencyChange = useCallback((mode) => {
     setFrequency(mode);
     if (mode === 'off' || isMuted) {
@@ -195,6 +217,14 @@ export default function App() {
   return (
     <>
       {showQuiz && <FlareQuizModal onComplete={handleQuizComplete} />}
+      <FocusReportModal
+        visible={showFocusReport}
+        onDismiss={dismissFocusReport}
+        wordsWritten={reportData?.wordsWritten ?? 0}
+        targetWords={reportData?.targetWords ?? wordTarget}
+        durationSeconds={reportData?.durationSeconds ?? 0}
+        guillotined={reportData?.guillotined ?? false}
+      />
       <Routes>
       <Route path="/history" element={<HistoryView />} />
       <Route path="/" element={
@@ -202,7 +232,7 @@ export default function App() {
           <div className="flex-1 min-h-0 flex flex-col p-3 md:p-8 max-w-7xl mx-auto w-full gap-4 md:gap-6">
             <Header syncStatus={syncStatus} onOpenVault={handleOpenVault} />
 
-            <main className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6 flex-1 min-h-0">
+            <main className={`grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6 flex-1 min-h-0 ${isRunning ? 'grid-rows-1' : ''}`}>
               <div className="order-1 lg:col-span-3 min-h-0">
                 <WritingArena
                   state={sessionState}
@@ -219,7 +249,7 @@ export default function App() {
                 />
               </div>
 
-              <div className="order-2 lg:col-span-2 flex flex-col gap-4 md:gap-6">
+              <div className={`order-2 lg:col-span-2 flex flex-col gap-4 md:gap-6 ${isRunning ? 'hidden lg:flex' : ''}`}>
                 <FlowOrb state={sessionState} velocity={velocity} streak={streak} graceTokens={graceTokens} wordCount={wordCount} wordTarget={wordTarget} />
 
                 <div className="sticky top-4 flex flex-col gap-4 md:gap-6">
@@ -272,6 +302,7 @@ export default function App() {
             error={vaultError}
             onRefresh={fetchEntries}
             onRecover={handleRecover}
+            graceTokens={graceTokens}
           />
 
           <footer className="footer flex justify-between items-center px-3 md:px-8 py-2 border-t border-slate-gray/60 text-xxs font-mono-custom" style={{ color: '#444441' }}>

@@ -13,6 +13,7 @@ import WritingArea from '../components/WritingArea';
 import AiNudge from '../components/AiNudge';
 import IdleWarning from '../components/IdleWarning';
 import GraceTokenButton from '../components/GraceTokenButton';
+import FocusReportModal from '../components/FocusReportModal';
 
 export default function ActiveSessionScreen({ route, navigation }) {
   const { colours } = useTheme();
@@ -23,6 +24,8 @@ export default function ActiveSessionScreen({ route, navigation }) {
   const [timerData, setTimerData] = useState({ remainingMs: durationMinutes * 60 * 1000, elapsedMs: 0, idleSinceMs: 0, warningSinceMs: 0, graceTokens: 3 });
   const [nudge, setNudge] = useState(null);
   const [nudgeTimer, setNudgeTimer] = useState(null);
+  const [showFocusReport, setShowFocusReport] = useState(false);
+  const [reportData, setReportData] = useState(null);
 
   const machineRef = useRef(null);
   const timerRef = useRef(null);
@@ -84,6 +87,23 @@ export default function ActiveSessionScreen({ route, navigation }) {
       } else if (entry.to === STATES.SAVED_BY_GRACE) {
         track('Grace Token Used (auto)', { graceTokens: entry.ctx.graceTokens });
       }
+      if (entry.to === STATES.COMPLETED) {
+        setReportData({
+          wordsWritten: entry.ctx.wordsWritten,
+          targetWords,
+          durationSeconds: durationMinutes * 60,
+          guillotined: false,
+        });
+        setShowFocusReport(true);
+      } else if (entry.to === STATES.GUILLOTINED) {
+        setReportData({
+          wordsWritten: entry.ctx.wordsWritten,
+          targetWords,
+          durationSeconds: timerData.elapsedMs / 1000,
+          guillotined: true,
+        });
+        setShowFocusReport(true);
+      }
     });
 
     machine.send(EVENTS.START);
@@ -117,11 +137,16 @@ export default function ActiveSessionScreen({ route, navigation }) {
     };
   }, [state, text, aiMode]);
 
+  const dismissFocusReport = useCallback(() => {
+    setShowFocusReport(false);
+    navigation.navigate('Home');
+  }, [navigation]);
+
   useEffect(() => {
-    if (state === STATES.COMPLETED || state === STATES.GUILLOTINED) {
+    if (!showFocusReport && (state === STATES.COMPLETED || state === STATES.GUILLOTINED)) {
       navigation.navigate('Home');
     }
-  }, [state, navigation]);
+  }, [state, showFocusReport, navigation]);
 
   const isWarning = state === STATES.WARNING || state === STATES.GUILLOTINED;
   const syncDot = colours.stateSuccess;
@@ -163,6 +188,15 @@ export default function ActiveSessionScreen({ route, navigation }) {
           <AiNudge prompt={nudge} onDismiss={dismissNudge} />
         )}
       </ScrollView>
+
+      <FocusReportModal
+        visible={showFocusReport}
+        onDismiss={dismissFocusReport}
+        wordsWritten={reportData?.wordsWritten ?? 0}
+        targetWords={reportData?.targetWords ?? targetWords}
+        durationSeconds={reportData?.durationSeconds ?? 0}
+        guillotined={reportData?.guillotined ?? false}
+      />
     </SafeAreaView>
   );
 }

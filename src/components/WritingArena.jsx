@@ -108,7 +108,7 @@ export default function WritingArena({
         isWarning ? 'ring-1 ring-velvet-crimson/30' : ''
       }`}
     >
-      <div className="header-bar flex justify-between items-center px-6 py-3 border-b border-slate-gray/60">
+      <div className={`header-bar flex justify-between items-center px-3 sm:px-6 py-1.5 sm:py-3 border-b border-slate-gray/60 ${state === 'idle' ? 'py-1 sm:py-3' : ''}`}>
         <div className="flex items-center gap-3">
           <span className={`state-badge ${badge}`}>
             {badge === 'danger' ? 'DANGER' : badge === 'warning' ? 'WARNING' : badge === 'writing' ? 'WRITING' : 'IDLE'}
@@ -127,7 +127,7 @@ export default function WritingArena({
         </div>
       </div>
 
-      <div className="w-full h-0.5 bg-slate-gray/80" style={{ background: '#1e1a0e' }}>
+      <div className={`w-full h-0.5 bg-slate-gray/80 ${state === 'idle' ? 'hidden sm:block' : ''}`} style={{ background: '#1e1a0e' }}>
         <div
           className="h-full transition-all duration-300"
           style={{
@@ -142,7 +142,7 @@ export default function WritingArena({
           ref={areaRef}
           className={`write-area w-full flex-1 min-h-0 bg-transparent text-ivory placeholder-stone-600 focus:outline-none resize-none font-serif text-base md:text-lg leading-relaxed custom-scrollbar ${
             isDanger ? 'bg-obsidian/40' : ''
-          }`}
+          } ${state === 'idle' ? 'max-h-[120px] sm:max-h-none' : ''}`}
           placeholder={
             state === 'idle'
               ? "Press 'Start Session' below to begin…"
@@ -217,7 +217,7 @@ export default function WritingArena({
         )}
       </div>
 
-      <div className="flex justify-between items-center px-6 py-3 border-t border-slate-gray/60 text-xxs font-mono-custom text-stone-500">
+      <div className={`flex justify-between items-center px-6 py-3 border-t border-slate-gray/60 text-xxs font-mono-custom text-stone-500 ${state === 'idle' ? 'hidden sm:flex' : ''}`}>
         <span>Draft saved locally.</span>
         <span>UTF-8</span>
       </div>
