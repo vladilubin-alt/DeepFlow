@@ -7,6 +7,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { supabase } from './src/lib/supabase';
 import { track, identify } from './src/services/AnalyticsService';
+import { isOnboardingComplete, presentFlareQuiz } from './src/services/FlareQuizService';
 
 import HomeScreen from './src/screens/HomeScreen';
 import ActiveSessionScreen from './src/screens/ActiveSessionScreen';
@@ -41,6 +42,12 @@ function AppContent() {
         identify(user.id);
         track('App Opened', { userId: user.id });
       }
+    });
+  }, []);
+
+  useEffect(() => {
+    isOnboardingComplete().then((done) => {
+      if (!done) presentFlareQuiz();
     });
   }, []);
 

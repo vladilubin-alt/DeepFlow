@@ -13,6 +13,7 @@ import SessionSetup from './components/SessionSetup';
 import SensoryLayer from './components/SensoryLayer';
 import VaultModal from './components/VaultModal';
 import HistoryView from './components/HistoryView';
+import FlareQuizModal, { isOnboardingComplete, getStoredFlare, FLARE_DEFAULTS } from './components/FlareQuizModal';
 
 function timeAgo(date) {
   const hours = Math.floor((Date.now() - date.getTime()) / 3600000);
@@ -50,6 +51,32 @@ export default function App() {
 
   const audio = useBinauralAudio();
   const prevStateRef = useRef(sessionState);
+
+  const [flareId, setFlareId] = useState(null);
+  const [showQuiz, setShowQuiz] = useState(false);
+
+  useEffect(() => {
+    if (!isOnboardingComplete()) {
+      setShowQuiz(true);
+    } else {
+      const stored = getStoredFlare();
+      if (stored && FLARE_DEFAULTS[stored]) {
+        setFlareId(stored);
+      }
+    }
+  }, []);
+
+  const handleQuizComplete = useCallback((resolvedFlare) => {
+    setFlareId(resolvedFlare);
+    setShowQuiz(false);
+    const defaults = FLARE_DEFAULTS[resolvedFlare];
+    if (defaults) {
+      setDuration(defaults.duration);
+      setWordTarget(defaults.wordTarget);
+      setAiMode(defaults.aiMode);
+    }
+    track('Flare Quiz Completed', { flare: resolvedFlare });
+  }, []);
 
   const [duration, setDuration] = useState(25);
   const [wordTarget, setWordTarget] = useState(300);
@@ -166,7 +193,9 @@ export default function App() {
   const recentVault = entries.slice(0, 3);
 
   return (
-    <Routes>
+    <>
+      {showQuiz && <FlareQuizModal onComplete={handleQuizComplete} />}
+      <Routes>
       <Route path="/history" element={<HistoryView />} />
       <Route path="/" element={
         <div className="h-screen flex flex-col">
@@ -252,5 +281,6 @@ export default function App() {
         </div>
       } />
     </Routes>
+    </>
   );
 }

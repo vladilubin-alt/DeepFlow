@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Purchases from 'react-native-purchases';
+import { supabase } from '../lib/supabase';
 
 export const FLARE_STORAGE_KEY = '@deepflow/flare';
 export const ONBOARDING_COMPLETE_KEY = '@deepflow/onboarding_complete';
@@ -25,7 +26,14 @@ export async function completeOnboarding(flare) {
   try {
     await AsyncStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
     await AsyncStorage.setItem(FLARE_STORAGE_KEY, flare);
-    await Purchases.setAttributes({ flare });
+    await Purchases.setAttributes({ flare_type: flare });
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from('profiles').upsert(
+        { id: user.id, flare_type: flare },
+        { onConflict: 'id' },
+      );
+    }
   } catch (e) {
     console.warn('[FlareQuiz] Persist failed:', e.message);
   }

@@ -45,9 +45,14 @@
 - [x] Create `SuperwallService.js` — init + `triggerGraceTokenPaywall()` wrapper
 - [x] Wire Trigger 3: Grace Token paywall in `ActiveSessionScreen.js` (0 tokens → Superwall `grace_token_refill` placement)
 - [x] Wire Grace Token guard in web `useDeepFlowSession.js` (early return when `graceTokens <= 0`)
-- [ ] Wire Trigger 1: Initial launch → Flare Quiz (Time Warp / Task Freeze / Decision Fog)
+- [x] Wire Trigger 1: Flare Quiz (2-step, 5 Flares, localStorage/AsyncStorage, per-flare defaults)
+- [x] Flare Quiz UI: Web (`FlareQuizModal.jsx`) + Mobile (`FlareQuizService.js`) with Supabase profile update + Mixpanel event
+- [x] RevenueCat attribute: `Purchases.setAttributes({ flare_type })` on quiz completion (mobile) + Supabase `profiles.flare_type` (web + mobile)
+- [x] Purchase controller handshake: RevenueCat init → Superwall config with `createPurchaseController()` wrapping `Purchases.purchaseProduct()`
+- [x] Entitlement pre-check: `canPurchaseTokens()` checks `extra_grace_tokens` entitlement before showing paywall
+- [x] Post-purchase Supabase sync: `Purchases.addCustomerInfoUpdateListener` grants tokens to `profiles` when entitlement detected
+- [x] Per-Flare personalized paywall mapping documented in `architecture/onboarding_experiment_protocol.md §11`
 - [ ] Wire Trigger 2: Post-session "Focus Report" value demonstration
-- [ ] Wire Superwall → RevenueCat handshake (purchase controller + entitlement listener)
 - [ ] Wire VaultScreen recovery → Superwall paywall when user lacks tokens
 
 ### P5 — Revenue (Google Play Billing)

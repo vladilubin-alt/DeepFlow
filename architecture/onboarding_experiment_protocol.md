@@ -172,3 +172,66 @@ On initial launch, users are bucketed into one of five Flare personas via a mult
 | `tools/verify_superwall.py` | API key validity + campaign reachability check |
 | `gemini.mmd` | Integrations section with Superwall + RevenueCat + Flare schema |
 | `task_plan.md` | P2.1 task list inserted before P5 |
+
+---
+
+## 11. Flare Attribute Mapping & Personalized Paywall Logic
+
+### 11.1 RevenueCat Attribute
+
+On quiz completion, the resolved Flare ID is sent to RevenueCat as a subscriber attribute:
+
+```js
+await Purchases.setAttributes({ flare_type: resolvedFlareId });
+```
+
+Where `resolvedFlareId` is one of: `time_warp`, `task_freeze`, `hyperfocus`, `decision_fog`, `crash_guilt`.
+
+This enables cohort analysis in RevenueCat (e.g. "Do Crash & Guilt users convert at higher rates?") and Superwall campaign targeting by segment.
+
+**Platform notes:**
+- **Mobile (React Native):** `Purchases.setAttributes()` is called inside `FlareQuizService.completeOnboarding()` — already wired.
+- **Web (Vite):** No RevenueCat SDK available. The flare is stored in the Supabase `profiles` table via `supabase.from('profiles').upsert({ flare_type })` on quiz completion.
+
+### 11.2 Personalized Paywall Trigger Mapping
+
+Each Flare persona maps to a recommended paywall trigger:
+
+| Flare | Primary Trigger | Superwall Placement |
+|-------|----------------|---------------------|
+| **Time Warp** | Vault recovery | `grace_token_pack` |
+| **Task Freeze** | Grace token refill | `grace_token_refill` |
+| **Hyperfocus Hijack** | Extended session unlock | `focus_report` |
+| **Decision Fog** | Grace token refill | `grace_token_refill` |
+| **Crash & Guilt** | Grace token refill | `grace_token_refill` |
+
+### 11.3 Entitlement Pre-check (Trigger 3)
+
+Before showing the `grace_token_refill` paywall, check if the user is already entitled:
+
+```js
+async function canPurchaseTokens() {
+  try {
+    const { customerInfo } = await Purchases.getCustomerInfo();
+    const entitled = customerInfo.entitlements.active['extra_grace_tokens']?.isActive;
+    return !entitled;
+  } catch {
+    return true;
+  }
+}
+```
+
+If `extra_grace_tokens` is active, silently grant 3 tokens and skip the paywall entirely.
+
+### 11.4 Supabase `profiles` Schema
+
+```sql
+alter table public.profiles
+add column flare_type text check (flare_type in (
+  'time_warp', 'task_freeze', 'hyperfocus', 'decision_fog', 'crash_guilt'
+));
+```
+
+---
+
+*Document version: 1.1 — Phase 5.2 Onboarding Experiment Protocol (added §11 Flare Attribute Mapping)*
