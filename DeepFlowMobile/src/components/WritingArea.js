@@ -1,10 +1,22 @@
 import { View, Text, TextInput } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 
-export default function WritingArea({ text, onTextChange, editable, fadingText, state }) {
+const REJECTION_LABELS = {
+  word_too_long: 'Word too long (max 25 chars)',
+  repetitive: 'Repetitive characters detected',
+  keyboard_walk: 'Keyboard walking detected',
+  no_vowels: 'No vowels in word',
+  consonant_cluster: 'Consonant cluster too long',
+  vowel_cluster: 'Vowel cluster too long',
+  repeated_words: 'Same word repeated 3+ times',
+};
+
+export default function WritingArea({ text, onTextChange, editable, fadingText, state, validationWarning }) {
   const { colours } = useTheme();
   const isDanger = state === 'guillotined' || state === 'warning';
-  const bgColour = isDanger ? colours.backgroundDanger : colours.backgroundSurface;
+  const isRejected = !!validationWarning;
+  const bgColour = isDanger ? colours.backgroundDanger : isRejected ? colours.stateDangerBg : colours.backgroundSurface;
+  const borderColour = isRejected ? colours.stateDanger : 'transparent';
 
   return (
     <View style={{
@@ -13,6 +25,8 @@ export default function WritingArea({ text, onTextChange, editable, fadingText, 
       minHeight: '30%',
       padding: 14,
       marginVertical: 8,
+      borderWidth: isRejected ? 1.5 : 0,
+      borderColor: borderColour,
     }}>
       {fadingText ? (
         <Text style={{ fontSize: 12, fontFamily: 'monospace', color: '#2a2510', position: 'absolute', top: 14, left: 14, right: 14 }}>
@@ -29,6 +43,22 @@ export default function WritingArea({ text, onTextChange, editable, fadingText, 
         placeholder="Start writing..."
         placeholderTextColor={colours.textDisabled}
       />
+      {isRejected && (
+        <View style={{
+          position: 'absolute',
+          bottom: 8,
+          left: 14,
+          right: 14,
+          backgroundColor: colours.stateDangerBg,
+          borderRadius: 4,
+          paddingHorizontal: 8,
+          paddingVertical: 4,
+        }}>
+          <Text style={{ fontSize: 10, color: colours.stateDanger, fontFamily: 'monospace' }}>
+            {REJECTION_LABELS[validationWarning] || validationWarning}
+          </Text>
+        </View>
+      )}
     </View>
   );
 }

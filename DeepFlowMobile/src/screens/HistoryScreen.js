@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 import { useSessionHistory } from '../hooks/useSessionHistory';
+import WordCountChart from '../components/WordCountChart';
 
 function formatDuration(sec) {
   const m = Math.floor(sec / 60);
@@ -34,39 +35,57 @@ function StreakCalendar({ sessions, colours }) {
       .filter(Boolean),
   );
 
+  const weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
   return (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
-      {days.map((d, i) => {
-        const key = d.toISOString().split('T')[0];
-        const hasSession = activeDates.has(key);
-        const isToday = key === today.toISOString().split('T')[0];
-        return (
-          <View
-            key={i}
-            style={{
-              width: '12.5%',
-              aspectRatio: 1,
-              borderRadius: 6,
-              backgroundColor: hasSession
-                ? colours.accentGold
-                : isToday
-                  ? colours.backgroundRaised
-                  : colours.backgroundSurface,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={{
-              fontSize: 9,
-              fontFamily: 'monospace',
-              color: hasSession ? colours.backgroundBase : colours.textMuted,
-              fontWeight: hasSession ? '600' : '400',
-            }}>
-              {d.getDate()}
+    <View>
+      <View style={{ flexDirection: 'row', marginBottom: 4 }}>
+        {weekdays.map((day, i) => (
+          <View key={i} style={{ width: '12.5%', alignItems: 'center' }}>
+            <Text style={{ fontSize: 8, color: colours.textMuted, fontWeight: '500' }}>
+              {day}
             </Text>
           </View>
-        );
-      })}
+        ))}
+      </View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
+        {days.map((d, i) => {
+          const key = d.toISOString().split('T')[0];
+          const hasSession = activeDates.has(key);
+          const isToday = key === today.toISOString().split('T')[0];
+          const isFirstOfMonth = d.getDate() === 1;
+          const isSunday = d.getDay() === 0;
+          const showBorder = isFirstOfMonth || isSunday;
+          return (
+            <View
+              key={i}
+              style={{
+                width: '12.5%',
+                aspectRatio: 1,
+                borderRadius: 6,
+                backgroundColor: hasSession
+                  ? colours.accentGold
+                  : isToday
+                    ? colours.backgroundRaised
+                    : colours.backgroundSurface,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: showBorder ? 0.5 : 0,
+                borderColor: colours.borderSubtle,
+              }}
+            >
+              <Text style={{
+                fontSize: 9,
+                fontFamily: 'monospace',
+                color: hasSession ? colours.backgroundBase : colours.textMuted,
+                fontWeight: hasSession ? '600' : '400',
+              }}>
+                {d.getDate()}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -82,6 +101,16 @@ function statusBadgeStyle(status, colours) {
     default:
       return { bg: colours.backgroundSurface, text: colours.textMuted, label: status };
   }
+}
+
+function calcFocusScore(session) {
+  const durationMin = session.duration_seconds / 60;
+  const wpm = durationMin > 0 ? session.words_written / durationMin : 0;
+  const targetRatio = session.target_words > 0
+    ? Math.min(1, session.words_written / session.target_words) : 0;
+  const penalty = session.guillotine_triggered ? 0.3 : 0;
+  return Math.round(Math.max(0, Math.min(100,
+    (wpm / 40) * 50 + targetRatio * 50 - penalty * 100)));
 }
 
 function FocusScoreCard({ session, colours }) {
@@ -103,7 +132,7 @@ function FocusScoreCard({ session, colours }) {
       borderTopColor: colours.borderSubtle,
     }}>
       {[
-        { label: 'Focus', value: 42 },
+        { label: 'Focus', value: calcFocusScore(session) },
         { label: 'WPM', value: wpm },
         { label: 'Target', value: `${targetPct}%` },
       ].map((item, i) => (
@@ -205,6 +234,8 @@ export default function HistoryScreen() {
             </View>
           </View>
         </View>
+
+        <WordCountChart sessions={sessions} />
 
         {error && (
           <View style={{

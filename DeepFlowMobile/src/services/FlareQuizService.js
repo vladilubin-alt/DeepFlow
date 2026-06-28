@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Purchases from 'react-native-purchases';
+import Superwall from '@superwall/react-native-superwall';
 import { supabase } from '../lib/supabase';
 
 export const FLARE_STORAGE_KEY = '@deepflow/flare';
@@ -41,8 +42,7 @@ export async function completeOnboarding(flare) {
 
 export async function presentFlareQuiz() {
   try {
-    const Superwall = require('@superwall/react-native-superwall').default;
-    await Superwall.shared.register({
+    await Superwall.register({
       placement: 'onboarding_flare_quiz',
       feature: () => {
         completeOnboarding('time_warp');

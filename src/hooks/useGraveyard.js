@@ -11,18 +11,22 @@ export function useGraveyard() {
     setLoading(true);
     setError(null);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setError('Sign in to view your vault.');
+        setEntries([]);
+        setLoading(false);
+        return;
+      }
       const { data, error: err } = await supabase
         .from('graveyard')
         .select('id, session_id, content, word_count, deleted_at')
+        .eq('user_id', user.id)
         .order('deleted_at', { ascending: false })
         .limit(limit);
 
       if (err) {
-        if (err.code === 'PGRST301') {
-          setError('Authentication required. Sign in to view your vault.');
-        } else {
-          setError(err.message);
-        }
+        setError(err.message);
         setEntries([]);
       } else {
         setEntries(data || []);

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../theme/ThemeContext';
 import { supabase } from '../lib/supabase';
 import { useGraveyard } from '../hooks/useGraveyard';
@@ -15,8 +16,16 @@ function timeAgo(date) {
   return `${days}d ago`;
 }
 
+function daysUntilPurge(deletedAt) {
+  if (!deletedAt) return null;
+  const elapsed = Date.now() - new Date(deletedAt).getTime();
+  const remaining = 30 - Math.floor(elapsed / 86400000);
+  return Math.max(0, remaining);
+}
+
 export default function VaultScreen() {
   const { colours } = useTheme();
+  const navigation = useNavigation();
   const { entries, loading, error, graceTokens, setGraceTokens, fetchEntries } = useGraveyard();
   const [recovering, setRecovering] = useState(null);
 
@@ -39,29 +48,50 @@ export default function VaultScreen() {
     const cost = costInfo(hoursAgo);
     if (cost.label === 'expired') return;
 
+    const wordCount = item.word_count || 100;
+    const estimatedMinutes = Math.max(3, Math.min(60, Math.round(wordCount / 20)));
+
     setRecovering(item.id);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+      if (!user) return;
+
       if (graceTokens > 0) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await supabase.from('profiles').update({ grace_tokens: graceTokens - 1 }).eq('id', user.id);
-        }
+        await supabase.from('profiles').update({ grace_tokens: graceTokens - 1 }).eq('id', user.id);
         setGraceTokens((t) => t - 1);
         track('Vault Recovered', { wordCount: item.word_count, method: 'grace_token' });
+        navigation.navigate('HomeTab', {
+          screen: 'ActiveSession',
+          params: {
+            durationMinutes: estimatedMinutes,
+            targetWords: wordCount,
+            sensoryMode: 'off',
+            aiMode: 'silent',
+            initialText: item.content || '',
+          },
+        });
       } else {
         triggerGraceTokenPaywall(async () => {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('grace_tokens')
-              .eq('id', user.id)
-              .single();
-            const newTokens = (profile?.grace_tokens ?? 0) + 3;
-            await supabase.from('profiles').update({ grace_tokens: newTokens }).eq('id', user.id);
-            setGraceTokens(newTokens);
-          }
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('grace_tokens')
+            .eq('id', user.id)
+            .single();
+          const newTokens = (profile?.grace_tokens ?? 0) + 3;
+          await supabase.from('profiles').update({ grace_tokens: newTokens }).eq('id', user.id);
+          setGraceTokens(newTokens);
           track('Vault Recovered', { wordCount: item.word_count, method: 'paywall' });
+          navigation.navigate('HomeTab', {
+            screen: 'ActiveSession',
+            params: {
+              durationMinutes: estimatedMinutes,
+              targetWords: wordCount,
+              sensoryMode: 'off',
+              aiMode: 'silent',
+              initialText: item.content || '',
+            },
+          });
         });
       }
     } finally {
@@ -125,6 +155,17 @@ export default function VaultScreen() {
                 <Text style={{ fontSize: 9, color: colours.textMuted, marginTop: 2 }}>
                   failed {timeAgo(new Date(item.deleted_at))} · {item.word_count} words
                 </Text>
+                {(() => {
+                  const daysLeft = daysUntilPurge(item.deleted_at);
+                  if (daysLeft !== null && daysLeft <= 7) {
+                    return (
+                      <Text style={{ fontSize: 9, color: daysLeft <= 3 ? colours.stateDanger : colours.accentGold, marginTop: 2 }}>
+                        {daysLeft === 0 ? 'expires today' : `purges in ${daysLeft}d`}
+                      </Text>
+                    );
+                  }
+                  return null;
+                })()}
               </View>
               <View style={{
                 backgroundColor: cost.colour + '20',

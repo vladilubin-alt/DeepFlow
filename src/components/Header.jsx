@@ -1,6 +1,5 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useTheme } from '../hooks/useTheme';
 
 function syncLabel(status) {
   switch (status) {
@@ -26,7 +25,6 @@ export default function Header({ syncStatus, onOpenVault }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isHistory = location.pathname === '/history';
-  const { mode, toggle } = useTheme();
 
   return (
     <header className="flex flex-row justify-between items-center gap-2 mb-1 sm:mb-6">
@@ -59,14 +57,6 @@ export default function Header({ syncStatus, onOpenVault }) {
           className="magnetic-btn px-2 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-mono-custom bg-deep-slate border border-slate-gray/60 text-stone-400 hover:text-champagne hover:border-champagne/40 transition"
         >
           <span className="hidden sm:inline">Vault </span>◆
-        </button>
-
-        <button
-          onClick={toggle}
-          className="magnetic-btn px-2 sm:px-3 py-1.5 sm:py-2 rounded-full text-xs font-mono-custom bg-deep-slate border border-slate-gray/60 text-stone-400 hover:text-champagne hover:border-champagne/40 transition"
-          title={`Switch to ${mode === 'dark' ? 'light' : 'dark'} theme`}
-        >
-          {mode === 'dark' ? '☀' : '☾'}
         </button>
 
         <div className="magnetic-btn flex items-center gap-1 sm:gap-3 glass-panel px-2 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-mono-custom cursor-default">

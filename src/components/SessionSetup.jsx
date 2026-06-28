@@ -1,7 +1,7 @@
 import React from 'react';
 
-const DURATIONS = ['10m', '25m', '45m', '60m'];
-const WORD_TARGETS = ['100', '300', '500', '750'];
+const DURATIONS = ['3m', '5m', '10m', '25m', '45m', '60m'];
+const WORD_TARGETS = ['25', '50', '100', '300', '500', '750'];
 const AI_MODES = ['silent', 'coach', 'demon'];
 
 export default function SessionSetup({
@@ -16,11 +16,12 @@ export default function SessionSetup({
   sessionState,
   graceTokens,
   streak,
+  ready,
 }) {
   const isIdle = sessionState === 'idle';
 
-  const durationIdx = [10, 25, 45, 60].indexOf(duration);
-  const targetIdx = [100, 300, 500, 750].indexOf(wordTarget);
+  const durationIdx = [3, 5, 10, 25, 45, 60].indexOf(duration);
+  const targetIdx = [25, 50, 100, 300, 500, 750].indexOf(wordTarget);
   const aiIdx = AI_MODES.indexOf(aiMode);
 
   return (
@@ -33,7 +34,7 @@ export default function SessionSetup({
           {DURATIONS.map((opt, i) => (
             <button
               key={opt}
-              onClick={() => onDurationChange([10, 25, 45, 60][i])}
+              onClick={() => onDurationChange([3, 5, 10, 25, 45, 60][i])}
               disabled={!isIdle}
               className={`seg-opt ${durationIdx === i ? 'seg-active' : ''} ${!isIdle ? 'opacity-40 cursor-not-allowed' : ''}`}
             >
@@ -49,7 +50,7 @@ export default function SessionSetup({
           {WORD_TARGETS.map((opt, i) => (
             <button
               key={opt}
-              onClick={() => onTargetChange([100, 300, 500, 750][i])}
+              onClick={() => onTargetChange([25, 50, 100, 300, 500, 750][i])}
               disabled={!isIdle}
               className={`seg-opt ${targetIdx === i ? 'seg-active' : ''} ${!isIdle ? 'opacity-40 cursor-not-allowed' : ''}`}
             >
@@ -77,10 +78,10 @@ export default function SessionSetup({
 
       <button
         onClick={onStart}
-        disabled={!isIdle}
+        disabled={!isIdle || !ready}
         className="magnetic-btn w-full py-3 rounded-xl bg-champagne text-obsidian font-bold font-sans text-sm uppercase tracking-[0.12em] hover:brightness-110 transition disabled:opacity-30 disabled:cursor-not-allowed"
       >
-        {isIdle ? 'Start Session' : 'Session in Progress…'}
+        {!ready ? 'Connecting...' : isIdle ? 'Start Session' : 'Session in Progress…'}
       </button>
 
       <div className="border-t border-slate-gray/60 pt-4 flex justify-between items-center">

@@ -1,13 +1,26 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../theme/ThemeContext';
 import { supabase } from '../lib/supabase';
+import { getReminderSettings, setReminderEnabled } from '../services/NotificationService';
+
+const HAPTIC_KEY = '@deepflow/settings/haptic';
+const SOUND_KEY = '@deepflow/settings/sound';
 
 export default function SettingsScreen() {
   const { colours, mode, toggle } = useTheme();
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [hapticOn, setHapticOn] = useState(true);
+  const [soundOn, setSoundOn] = useState(true);
+  const [reminderOn, setReminderOn] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem(HAPTIC_KEY).then(v => { if (v !== null) setHapticOn(v === 'true'); });
+    AsyncStorage.getItem(SOUND_KEY).then(v => { if (v !== null) setSoundOn(v === 'true'); });
+    getReminderSettings().then(s => setReminderOn(s.enabled));
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -22,34 +35,27 @@ export default function SettingsScreen() {
     return () => listener?.subscription?.unsubscribe();
   }, []);
 
-  const isAnonymous = user?.is_anonymous ?? user?.app_metadata?.provider === undefined;
-
-  const handleSignIn = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.linkIdentity({
-        provider: 'google',
-        options: {
-          redirectTo: 'deepflow://auth/callback',
-        },
-      });
-      if (error) {
-        if (error.message.includes('already linked')) {
-          Alert.alert('Already Linked', 'This Google account is already linked to another user. Try a different account.');
-        } else {
-          Alert.alert('Sign In Failed', error.message);
-        }
-      }
-    } catch (e) {
-      Alert.alert('Sign In Failed', e.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   const handleSignOut = useCallback(async () => {
     await supabase.auth.signOut();
   }, []);
+
+  const toggleHaptic = useCallback(async () => {
+    const next = !hapticOn;
+    setHapticOn(next);
+    await AsyncStorage.setItem(HAPTIC_KEY, String(next));
+  }, [hapticOn]);
+
+  const toggleSound = useCallback(async () => {
+    const next = !soundOn;
+    setSoundOn(next);
+    await AsyncStorage.setItem(SOUND_KEY, String(next));
+  }, [soundOn]);
+
+  const toggleReminder = useCallback(async () => {
+    const next = !reminderOn;
+    setReminderOn(next);
+    await setReminderEnabled(next);
+  }, [reminderOn]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colours.backgroundBase }}>
@@ -61,57 +67,50 @@ export default function SettingsScreen() {
             <>
               <Row
                 label="Signed in"
-                value={isAnonymous ? 'Anonymous' : user.email || 'Connected'}
+                value={user.email || 'Connected'}
                 colours={colours}
               />
               <Row label="User ID" value={user.id?.slice(0, 12) + '...'} colours={colours} />
-              {isAnonymous && (
-                <TouchableOpacity
-                  onPress={handleSignIn}
-                  disabled={loading}
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    paddingHorizontal: 14,
-                    paddingVertical: 14,
-                    backgroundColor: colours.backgroundSurface,
-                    borderBottomWidth: 0.5,
-                    borderBottomColor: colours.borderSubtle,
-                  }}
-                >
-                  <Text style={{ fontSize: 12, color: colours.accentGold, fontWeight: '500' }}>
-                    {loading ? 'Signing in...' : 'Sign in with Google'}
-                  </Text>
-                </TouchableOpacity>
-              )}
-              {!isAnonymous && (
-                <TouchableOpacity
-                  onPress={handleSignOut}
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    paddingHorizontal: 14,
-                    paddingVertical: 14,
-                    backgroundColor: colours.backgroundSurface,
-                    borderBottomWidth: 0.5,
-                    borderBottomColor: colours.borderSubtle,
-                  }}
-                >
-                  <Text style={{ fontSize: 12, color: colours.stateDanger }}>Sign Out</Text>
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                onPress={handleSignOut}
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  paddingHorizontal: 14,
+                  paddingVertical: 14,
+                  backgroundColor: colours.backgroundSurface,
+                  borderBottomWidth: 0.5,
+                  borderBottomColor: colours.borderSubtle,
+                }}
+              >
+                <Text style={{ fontSize: 12, color: colours.stateDanger }}>Sign Out</Text>
+              </TouchableOpacity>
             </>
           ) : (
-            <Row label="Auth" value="Not initialized" colours={colours} />
+            <Row label="Auth" value="Not signed in" colours={colours} />
           )}
         </Section>
 
         <Section title="App" colours={colours}>
-          <Row label="Sensory audio" value="Off (coming soon)" colours={colours} />
-          <Row label="Haptic feedback" value="On" colours={colours} />
-          <Row label="Sound effects" value="On" colours={colours} />
+          <Row
+            label="Haptic feedback"
+            value={hapticOn ? 'On' : 'Off'}
+            colours={colours}
+            onPress={toggleHaptic}
+          />
+          <Row
+            label="Sound effects"
+            value={soundOn ? 'On' : 'Off'}
+            colours={colours}
+            onPress={toggleSound}
+          />
+          <Row
+            label="Daily reminder"
+            value={reminderOn ? '9:00 AM' : 'Off'}
+            colours={colours}
+            onPress={toggleReminder}
+          />
         </Section>
 
         <Section title="Theme" colours={colours}>
@@ -130,7 +129,7 @@ export default function SettingsScreen() {
         </Section>
 
         <Section title="About" colours={colours}>
-          <Row label="Version" value="0.1.0" colours={colours} />
+          <Row label="Version" value="0.3.0" colours={colours} />
           <Row label="Build" value="React Native" colours={colours} />
           <Row label="Data" value="Local-first + Supabase" colours={colours} />
         </Section>

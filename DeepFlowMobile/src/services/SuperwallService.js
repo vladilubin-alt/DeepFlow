@@ -1,11 +1,14 @@
 import Purchases from 'react-native-purchases';
-import Config from 'react-native-config';
+import { NativeModules } from 'react-native';
+import Superwall from '@superwall/react-native-superwall';
 import { supabase } from '../lib/supabase';
-
-const SUPERWALL_API_KEY = Config.SUPERWALL_API_KEY;
-const REVENUECAT_API_KEY = Config.REVENUECAT_API_KEY;
+import { SUPERWALL_API_KEY, REVENUECAT_API_KEY } from '../config/env';
 
 let initialized = false;
+
+// Diagnostic: check if native module is available
+const hasNativeModule = !!NativeModules.SuperwallReactNative;
+console.log('[Superwall] Native module available:', hasNativeModule);
 
 async function initRevenueCat() {
   try {
@@ -65,18 +68,16 @@ export async function initSuperwall() {
   if (initialized) return;
   try {
     await initRevenueCat();
-    const Superwall = require('@superwall/react-native-superwall').default;
-    await Superwall.configure({
+    console.log('[Superwall] Starting configure with key:', SUPERWALL_API_KEY ? SUPERWALL_API_KEY.substring(0, 8) + '...' : 'MISSING');
+    const result = await Superwall.configure({
       apiKey: SUPERWALL_API_KEY,
       purchaseController: createPurchaseController(),
-      options: {
-        shouldPreload: true,
-      },
     });
+    console.log('[Superwall] Configure result:', result);
     initialized = true;
     Purchases.addCustomerInfoUpdateListener(async (customerInfo) => {
       const hasExtraTokens = customerInfo.entitlements.active['extra_grace_tokens']?.isActive === true;
-      Superwall.shared.setSubscriptionStatus(
+      Superwall.shared?.setSubscriptionStatus?.(
         hasExtraTokens
           ? { type: 'active', toJSON() { return { type: 'active' }; } }
           : { type: 'inactive', toJSON() { return { type: 'inactive' }; } }
@@ -104,6 +105,7 @@ export async function initSuperwall() {
     console.log('[Superwall] Configured with RevenueCat purchase controller');
   } catch (e) {
     console.warn('[Superwall] Init failed:', e.message);
+    console.warn('[Superwall] Stack:', e.stack);
   }
 }
 
@@ -124,8 +126,7 @@ export async function triggerGraceTokenPaywall(onPurchase) {
       if (onPurchase) onPurchase();
       return;
     }
-    const Superwall = require('@superwall/react-native-superwall').default;
-    await Superwall.shared.register({
+    await Superwall.register({
       placement: 'grace_token_refill',
       feature: () => {
         if (onPurchase) onPurchase();

@@ -43,12 +43,21 @@ export function useSessionHistory() {
     setLoading(true);
     setError(null);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        const cached = localStorage.getItem(STORE_KEY);
+        if (cached) setSessions(JSON.parse(cached));
+        setLoading(false);
+        return;
+      }
+
       const cached = localStorage.getItem(STORE_KEY);
       const parsed = cached ? JSON.parse(cached) : null;
 
       const { data, error: err } = await supabase
         .from('writing_sessions')
         .select('*')
+        .eq('user_id', user.id)
         .order('started_at', { ascending: false })
         .limit(50);
 

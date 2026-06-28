@@ -19,10 +19,10 @@ const CONFIRMATIONS = [
 
 export const FLARE_DEFAULTS = {
   time_warp: { duration: 45, wordTarget: 500, aiMode: 'silent' },
-  task_freeze: { duration: 25, wordTarget: 300, aiMode: 'coach' },
+  task_freeze: { duration: 5, wordTarget: 50, aiMode: 'coach' },
   hyperfocus: { duration: 30, wordTarget: 500, aiMode: 'silent' },
-  decision_fog: { duration: 25, wordTarget: 300, aiMode: 'coach' },
-  crash_guilt: { duration: 15, wordTarget: 100, aiMode: 'demon' },
+  decision_fog: { duration: 5, wordTarget: 25, aiMode: 'coach' },
+  crash_guilt: { duration: 3, wordTarget: 25, aiMode: 'demon' },
 };
 
 export function getStoredFlare() {

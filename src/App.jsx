@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { useDeepFlowSession } from './hooks/useDeepFlowSession';
 import { useGraveyard } from './hooks/useGraveyard';
@@ -15,6 +15,42 @@ import VaultModal from './components/VaultModal';
 import HistoryView from './components/HistoryView';
 import FlareQuizModal, { isOnboardingComplete, getStoredFlare, FLARE_DEFAULTS } from './components/FlareQuizModal';
 import FocusReportModal from './components/FocusReportModal';
+
+function BottomNav() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const isActive = (path) => location.pathname === path;
+
+  const navItems = [
+    { path: '/', icon: 'home', label: 'Home' },
+    { path: '/history', icon: 'history', label: 'History' },
+    { path: '/', icon: 'lock', label: 'Vault', action: 'vault' },
+  ];
+
+  const handleNav = (item) => {
+    if (item.action === 'vault') {
+      window.dispatchEvent(new CustomEvent('open-vault'));
+    } else {
+      navigate(item.path);
+    }
+  };
+
+  return (
+    <nav className="bottom-nav">
+      {navItems.map((item) => (
+        <button
+          key={item.icon}
+          onClick={() => handleNav(item)}
+          className={`bottom-nav-item ${isActive(item.path) && item.action !== 'vault' ? 'active' : ''}`}
+        >
+          <span className="material-icons">{item.icon}</span>
+          <span>{item.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
 
 function timeAgo(date) {
   const hours = Math.floor((Date.now() - date.getTime()) / 3600000);
@@ -89,6 +125,7 @@ export default function App() {
   const [vaultOpen, setVaultOpen] = useState(false);
   const [showFocusReport, setShowFocusReport] = useState(false);
   const [reportData, setReportData] = useState(null);
+  const [ready, setReady] = useState(false);
 
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
 
@@ -125,6 +162,7 @@ export default function App() {
     supabase.auth.signInAnonymously().then(({ data, error }) => {
       if (error) {
         console.warn('[Auth] signInAnonymously failed, falling back to local:', error.message);
+        setReady(true);
         return;
       }
       const { user, session } = data;
@@ -134,8 +172,15 @@ export default function App() {
         identify(user.id);
         track('App Opened', { userId: user.id });
       }
+      setReady(true);
     });
   }, [setAuth]);
+
+  useEffect(() => {
+    const handler = () => setVaultOpen(true);
+    window.addEventListener('open-vault', handler);
+    return () => window.removeEventListener('open-vault', handler);
+  }, []);
 
   useEffect(() => {
     if (recoveredContent) {
@@ -229,7 +274,7 @@ export default function App() {
       <Route path="/history" element={<HistoryView />} />
       <Route path="/" element={
         <div className="h-screen flex flex-col">
-          <div className="flex-1 min-h-0 flex flex-col p-3 md:p-8 max-w-7xl mx-auto w-full gap-4 md:gap-6">
+          <div className="flex-1 min-h-0 flex flex-col p-3 md:p-8 max-w-7xl mx-auto w-full gap-4 md:gap-6 pb-24">
             <Header syncStatus={syncStatus} onOpenVault={handleOpenVault} />
 
             <main className={`grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6 flex-1 min-h-0 ${isRunning ? 'grid-rows-1' : ''}`}>
@@ -265,6 +310,7 @@ export default function App() {
                     sessionState={sessionState}
                     graceTokens={graceTokens}
                     streak={streak}
+                    ready={ready}
                   />
 
                   <SensoryLayer
@@ -293,6 +339,8 @@ export default function App() {
               </div>
             )}
           </div>
+
+          <BottomNav />
 
           <VaultModal
             open={vaultOpen}

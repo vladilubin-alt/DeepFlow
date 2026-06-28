@@ -2,13 +2,15 @@ import { View, Text } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import ProgressBar from './ProgressBar';
 
-export default function TimerDisplay({ remainingMs, wordsWritten, targetWords }) {
+export default function TimerDisplay({ remainingMs, wordsWritten, targetWords, elapsedMs }) {
   const { colours } = useTheme();
   const totalSec = Math.max(0, Math.floor(remainingMs / 1000));
   const mins = Math.floor(totalSec / 60);
   const secs = totalSec % 60;
   const timerStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-  const wpm = 0; // placeholder — would need session elapsed time
+
+  const elapsedMin = (elapsedMs || 0) / 60000;
+  const wpm = elapsedMin > 0.05 ? Math.round(wordsWritten / elapsedMin) : 0;
   const wpmFraction = Math.min(wpm / 60, 1);
 
   return (

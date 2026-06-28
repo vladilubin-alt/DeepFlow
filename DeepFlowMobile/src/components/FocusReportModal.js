@@ -1,7 +1,9 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { track } from '../services/AnalyticsService';
+import { supabase } from '../lib/supabase';
+import Superwall from '@superwall/react-native-superwall';
 
 function calcFocusScore(wordsWritten, targetWords, durationSeconds, guillotined) {
   const durationMin = durationSeconds / 60;
@@ -21,6 +23,20 @@ function formatDuration(seconds) {
   return `${m}m ${s}s`;
 }
 
+function getScoreColor(score, colours) {
+  if (score >= 80) return colours.stateSuccess;
+  if (score >= 50) return colours.accentGold;
+  return colours.stateDanger;
+}
+
+function getScoreLabel(score) {
+  if (score >= 90) return 'Outstanding';
+  if (score >= 75) return 'Great focus';
+  if (score >= 50) return 'Good effort';
+  if (score >= 30) return 'Room to improve';
+  return 'Tough session';
+}
+
 export default function FocusReportModal({
   visible,
   onDismiss,
@@ -30,6 +46,8 @@ export default function FocusReportModal({
   guillotined,
 }) {
   const { colours } = useTheme();
+  const [stats, setStats] = useState({ bestWpm: 0, totalWords: 0, totalSessions: 0, streak: 0 });
+
   const wpm = durationSeconds > 0
     ? Math.round(wordsWritten / (durationSeconds / 60))
     : 0;
@@ -38,7 +56,47 @@ export default function FocusReportModal({
     : 0;
   const focusScore = calcFocusScore(wordsWritten, targetWords, durationSeconds, guillotined);
 
-  const metric = (label, value) => (
+  useEffect(() => {
+    if (!visible) return;
+    const fetchStats = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) return;
+        const { data } = await supabase
+          .from('writing_sessions')
+          .select('words_written, duration_seconds, started_at, status')
+          .eq('user_id', session.user.id)
+          .order('started_at', { ascending: false })
+          .limit(50);
+        if (!data || data.length === 0) return;
+
+        let bestWpm = 0;
+        let totalWords = 0;
+        data.forEach(s => {
+          const d = s.duration_seconds / 60;
+          const sessionWpm = d > 0 ? Math.round(s.words_written / d) : 0;
+          if (sessionWpm > bestWpm) bestWpm = sessionWpm;
+          totalWords += s.words_written || 0;
+        });
+
+        const activeDates = new Set(
+          data.filter(s => s.status === 'completed' || s.status === 'saved_by_grace')
+            .map(s => s.started_at?.split('T')[0])
+        );
+        let streak = 0;
+        const d = new Date();
+        while (activeDates.has(d.toISOString().split('T')[0])) {
+          streak++;
+          d.setDate(d.getDate() - 1);
+        }
+
+        setStats({ bestWpm, totalWords, totalSessions: data.length, streak });
+      } catch (e) {}
+    };
+    fetchStats();
+  }, [visible]);
+
+  const metric = (label, value, subtext) => (
     <View style={{ alignItems: 'center', flex: 1 }}>
       <Text style={{ fontSize: 22, color: colours.accentGold, fontWeight: '600', marginBottom: 2 }}>
         {value}
@@ -46,13 +104,17 @@ export default function FocusReportModal({
       <Text style={{ fontSize: 9, color: colours.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>
         {label}
       </Text>
+      {subtext && (
+        <Text style={{ fontSize: 8, color: colours.textDisabled, marginTop: 1 }}>
+          {subtext}
+        </Text>
+      )}
     </View>
   );
 
   const showUpsell = useCallback(async () => {
     try {
-      const Superwall = require('@superwall/react-native-superwall').default;
-      await Superwall.shared.register({
+      await Superwall.register({
         placement: 'focus_report',
         feature: () => {
           track('Focus Report Upsell Converted');
@@ -63,6 +125,9 @@ export default function FocusReportModal({
     }
     track('Focus Report Upsell Shown');
   }, []);
+
+  const scoreColor = getScoreColor(focusScore, colours);
+  const scoreLabel = getScoreLabel(focusScore);
 
   return (
     <Modal
@@ -83,7 +148,7 @@ export default function FocusReportModal({
           borderRadius: 20,
           padding: 24,
           width: '100%',
-          maxWidth: 340,
+          maxWidth: 360,
         }}>
           <Text style={{
             fontSize: 15,
@@ -109,21 +174,24 @@ export default function FocusReportModal({
             backgroundColor: colours.backgroundBase,
             borderRadius: 12,
             padding: 16,
-            marginBottom: 16,
+            marginBottom: 12,
           }}>
-            <View style={{ alignItems: 'center', marginBottom: 12 }}>
-              <Text style={{ fontSize: 36, color: colours.accentGold, fontWeight: '700' }}>
+            <View style={{ alignItems: 'center', marginBottom: 4 }}>
+              <Text style={{ fontSize: 42, color: scoreColor, fontWeight: '700' }}>
                 {focusScore}
+              </Text>
+              <Text style={{ fontSize: 10, color: scoreColor, fontWeight: '500', marginBottom: 2 }}>
+                {scoreLabel}
               </Text>
               <Text style={{ fontSize: 9, color: colours.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>
                 Focus Score
               </Text>
             </View>
 
-            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-              {metric('Words', wordsWritten)}
-              {metric('WPM', wpm)}
-              {metric('Target', `${targetPct}%`)}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 12 }}>
+              {metric('Words', wordsWritten, `of ${targetWords}`)}
+              {metric('WPM', wpm, stats.bestWpm > 0 ? `best: ${stats.bestWpm}` : '')}
+              {metric('Target', `${targetPct}%`, '')}
             </View>
 
             <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colours.borderSubtle, alignItems: 'center' }}>
@@ -131,6 +199,31 @@ export default function FocusReportModal({
                 Duration: {formatDuration(durationSeconds)}
               </Text>
             </View>
+          </View>
+
+          <View style={{
+            flexDirection: 'row',
+            backgroundColor: colours.backgroundBase,
+            borderRadius: 10,
+            padding: 12,
+            marginBottom: 12,
+            gap: 8,
+          }}>
+            {[
+              { label: 'Streak', value: `${stats.streak}d`, icon: '🔥' },
+              { label: 'Sessions', value: stats.totalSessions, icon: '📝' },
+              { label: 'Total Words', value: stats.totalWords.toLocaleString(), icon: '✍️' },
+            ].map((item, i) => (
+              <View key={i} style={{ flex: 1, alignItems: 'center' }}>
+                <Text style={{ fontSize: 14 }}>{item.icon}</Text>
+                <Text style={{ fontSize: 14, color: colours.accentGold, fontWeight: '600', marginTop: 2 }}>
+                  {item.value}
+                </Text>
+                <Text style={{ fontSize: 8, color: colours.textMuted, marginTop: 1 }}>
+                  {item.label}
+                </Text>
+              </View>
+            ))}
           </View>
 
           <TouchableOpacity
