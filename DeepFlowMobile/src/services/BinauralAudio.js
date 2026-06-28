@@ -104,26 +104,26 @@ export function useBinauralAudio() {
     } catch (e) {}
   }, [stop]);
 
+  const buzz = useCallback((type, count, gap) => {
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        try { trigger(type, hapticOptions); } catch (_) {}
+      }, i * gap);
+    }
+  }, []);
+
   const vibrate = useCallback((pattern) => {
     try {
       if (Array.isArray(pattern)) {
-        let delay = 0;
-        for (let i = 1; i < pattern.length; i += 2) {
-          const pause = pattern[i - 1] || 0;
-          delay += pause;
-          const dur = pattern[i];
-          ((d) => {
-            setTimeout(() => {
-              try { trigger(HapticFeedbackTypes.impactHeavy, hapticOptions); } catch (_) {}
-            }, d);
-          })(delay);
-          delay += dur;
-        }
+        const totalMs = pattern.reduce((a, b) => a + b, 0);
+        const vibrateMs = pattern.filter((_, i) => i % 2 === 1).reduce((a, b) => a + b, 0);
+        const count = Math.max(1, Math.round(vibrateMs / 50));
+        buzz(HapticFeedbackTypes.impactHeavy, count, 50);
       } else {
-        trigger(HapticFeedbackTypes.impactHeavy, hapticOptions);
+        buzz(HapticFeedbackTypes.impactHeavy, 3, 40);
       }
     } catch (e) {}
-  }, []);
+  }, [buzz]);
 
   useEffect(() => {
     return () => stop();
