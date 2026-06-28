@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { StatusBar, View, Text } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
@@ -6,6 +6,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { trigger, HapticFeedbackTypes } from 'react-native-haptic-feedback';
 import { supabase } from './src/lib/supabase';
 import { track, identify } from './src/services/AnalyticsService';
 import { isOnboardingComplete, presentFlareQuiz } from './src/services/FlareQuizService';
@@ -37,6 +39,19 @@ function AppContent() {
   const insets = useSafeAreaInsets();
   const [authReady, setAuthReady] = useState(false);
   const [session, setSession] = useState(null);
+  const [hapticEnabled, setHapticEnabled] = useState(true);
+
+  useEffect(() => {
+    AsyncStorage.getItem('@deepflow/settings/haptic').then(v => {
+      if (v !== null) setHapticEnabled(v === 'true');
+    });
+  }, []);
+
+  const tabHaptic = useCallback(() => {
+    if (hapticEnabled) {
+      try { trigger(HapticFeedbackTypes.impactLight, { enableVibrateFallback: true, ignoreAndroidSystemSettings: false }); } catch (e) {}
+    }
+  }, [hapticEnabled]);
 
   useEffect(() => {
     let mounted = true;
@@ -145,6 +160,7 @@ function AppContent() {
           <Tab.Screen
             name="HomeTab"
             component={HomeStackScreen}
+            listeners={{ tabPress: () => tabHaptic() }}
             options={{
               tabBarLabel: 'Home',
               tabBarIcon: ({ color, size }) => (
@@ -155,6 +171,7 @@ function AppContent() {
           <Tab.Screen
             name="History"
             component={HistoryScreen}
+            listeners={{ tabPress: () => tabHaptic() }}
             options={{
               tabBarLabel: 'History',
               tabBarIcon: ({ color, size }) => (
@@ -165,6 +182,7 @@ function AppContent() {
           <Tab.Screen
             name="Vault"
             component={VaultScreen}
+            listeners={{ tabPress: () => tabHaptic() }}
             options={{
               tabBarLabel: 'Vault',
               tabBarIcon: ({ color, size }) => (
@@ -175,6 +193,7 @@ function AppContent() {
           <Tab.Screen
             name="Settings"
             component={SettingsScreen}
+            listeners={{ tabPress: () => tabHaptic() }}
             options={{
               tabBarLabel: 'Settings',
               tabBarIcon: ({ color, size }) => (

@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../theme/ThemeContext';
 import { supabase } from '../lib/supabase';
-import { getReminderSettings, setReminderEnabled } from '../services/NotificationService';
+import { getReminderSettings, setReminderEnabled, setReminderTime } from '../services/NotificationService';
 
 const HAPTIC_KEY = '@deepflow/settings/haptic';
 const SOUND_KEY = '@deepflow/settings/sound';
@@ -15,11 +15,18 @@ export default function SettingsScreen() {
   const [hapticOn, setHapticOn] = useState(true);
   const [soundOn, setSoundOn] = useState(true);
   const [reminderOn, setReminderOn] = useState(false);
+  const [reminderHour, setReminderHour] = useState(9);
+  const [reminderMinute, setReminderMinute] = useState(0);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(HAPTIC_KEY).then(v => { if (v !== null) setHapticOn(v === 'true'); });
     AsyncStorage.getItem(SOUND_KEY).then(v => { if (v !== null) setSoundOn(v === 'true'); });
-    getReminderSettings().then(s => setReminderOn(s.enabled));
+    getReminderSettings().then(s => {
+      setReminderOn(s.enabled);
+      setReminderHour(s.hour);
+      setReminderMinute(s.minute);
+    });
   }, []);
 
   useEffect(() => {
@@ -56,6 +63,20 @@ export default function SettingsScreen() {
     setReminderOn(next);
     await setReminderEnabled(next);
   }, [reminderOn]);
+
+  const formatTime = (h, m) => {
+    const period = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${m.toString().padStart(2, '0')} ${period}`;
+  };
+
+  const adjustReminderTime = useCallback(async (deltaH, deltaM) => {
+    let newH = (reminderHour + deltaH + 24) % 24;
+    let newM = (reminderMinute + deltaM + 60) % 60;
+    setReminderHour(newH);
+    setReminderMinute(newM);
+    await setReminderTime(newH, newM);
+  }, [reminderHour, reminderMinute]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colours.backgroundBase }}>
@@ -107,10 +128,30 @@ export default function SettingsScreen() {
           />
           <Row
             label="Daily reminder"
-            value={reminderOn ? '9:00 AM' : 'Off'}
+            value={reminderOn ? formatTime(reminderHour, reminderMinute) : 'Off'}
             colours={colours}
             onPress={toggleReminder}
           />
+          {reminderOn && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colours.borderSubtle }}>
+              <TouchableOpacity onPress={() => adjustReminderTime(-1, 0)} style={{ paddingHorizontal: 16, paddingVertical: 6 }}>
+                <Text style={{ fontSize: 16, color: colours.accentGold }}>◀</Text>
+              </TouchableOpacity>
+              <Text style={{ fontSize: 20, color: colours.textPrimary, fontWeight: '500', marginHorizontal: 12, minWidth: 80, textAlign: 'center' }}>
+                {formatTime(reminderHour, reminderMinute)}
+              </Text>
+              <TouchableOpacity onPress={() => adjustReminderTime(1, 0)} style={{ paddingHorizontal: 16, paddingVertical: 6 }}>
+                <Text style={{ fontSize: 16, color: colours.accentGold }}>▶</Text>
+              </TouchableOpacity>
+              <View style={{ width: 12 }} />
+              <TouchableOpacity onPress={() => adjustReminderTime(0, -15)} style={{ paddingHorizontal: 12, paddingVertical: 6 }}>
+                <Text style={{ fontSize: 14, color: colours.textMuted }}>-15m</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => adjustReminderTime(0, 15)} style={{ paddingHorizontal: 12, paddingVertical: 6 }}>
+                <Text style={{ fontSize: 14, color: colours.textMuted }}>+15m</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </Section>
 
         <Section title="Theme" colours={colours}>

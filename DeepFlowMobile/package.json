@@ -27,6 +27,7 @@
     "react-native-config": "^1.6.1",
     "react-native-gesture-handler": "^3.0.2",
     "react-native-get-random-values": "^2.0.0",
+    "react-native-haptic-feedback": "^3.0.0",
     "react-native-purchases": "^10.4.0",
     "react-native-reanimated": "^4.4.1",
     "react-native-safe-area-context": "^5.8.0",

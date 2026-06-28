@@ -1,18 +1,17 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { AudioContext } from 'react-native-audio-api';
+import { trigger, HapticFeedbackTypes } from 'react-native-haptic-feedback';
 
-let hapticModule = null;
-
-try {
-  hapticModule = require('react-native').Vibration;
-} catch (e) {}
+const hapticOptions = {
+  enableVibrateFallback: true,
+  ignoreAndroidSystemSettings: false,
+};
 
 export function useBinauralAudio() {
   const ctxRef = useRef(null);
   const leftOscRef = useRef(null);
   const rightOscRef = useRef(null);
   const gainRef = useRef(null);
-  const mergerRef = useRef(null);
   const isPlayingRef = useRef(false);
   const modeRef = useRef('off');
 
@@ -26,7 +25,6 @@ export function useBinauralAudio() {
     } catch (e) {}
     ctxRef.current = null;
     gainRef.current = null;
-    mergerRef.current = null;
     isPlayingRef.current = false;
     modeRef.current = 'off';
   }, []);
@@ -56,16 +54,23 @@ export function useBinauralAudio() {
       rightOsc.frequency.value = baseFreq + beatFreq;
       rightOsc.type = 'sine';
 
-      if (typeof ctx.createChannelMerger === 'function') {
-        const merger = ctx.createChannelMerger(2);
-        mergerRef.current = merger;
-        try { leftOsc.connect(merger, 0, 0); } catch (_) { leftOsc.connect(merger); }
-        try { rightOsc.connect(merger, 0, 1); } catch (_) { rightOsc.connect(merger); }
-        merger.connect(gain);
+      const hasStereoPanner = typeof ctx.createStereoPanner === 'function';
+
+      if (hasStereoPanner) {
+        const leftPanner = ctx.createStereoPanner();
+        leftPanner.pan.value = -1;
+        const rightPanner = ctx.createStereoPanner();
+        rightPanner.pan.value = 1;
+
+        leftOsc.connect(leftPanner);
+        leftPanner.connect(gain);
+        rightOsc.connect(rightPanner);
+        rightPanner.connect(gain);
       } else {
         leftOsc.connect(gain);
         rightOsc.connect(gain);
       }
+
       gain.connect(ctx.destination);
 
       leftOsc.start();
@@ -101,12 +106,8 @@ export function useBinauralAudio() {
 
   const vibrate = useCallback((pattern) => {
     try {
-      if (hapticModule && hapticModule.vibrate) {
-        hapticModule.vibrate(pattern);
-      }
-    } catch (e) {
-      // Permission not granted — silent fallback
-    }
+      trigger(HapticFeedbackTypes.impactMedium, hapticOptions);
+    } catch (e) {}
   }, []);
 
   useEffect(() => {

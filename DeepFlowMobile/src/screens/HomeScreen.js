@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Vibration } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { trigger, HapticFeedbackTypes } from 'react-native-haptic-feedback';
 import { useTheme } from '../theme/ThemeContext';
 import TopBar from '../components/TopBar';
 import StatStrip from '../components/StatStrip';
@@ -138,7 +139,7 @@ export default function HomeScreen({ navigation }) {
 
   const hapticTap = useCallback(() => {
     if (hapticOn) {
-      try { Vibration.vibrate(100); } catch (e) { console.warn('[Haptic] error:', e.message); }
+      try { trigger(HapticFeedbackTypes.impactLight, { enableVibrateFallback: true, ignoreAndroidSystemSettings: false }); } catch (e) {}
     }
   }, [hapticOn]);
 
