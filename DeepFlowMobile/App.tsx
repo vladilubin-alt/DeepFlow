@@ -49,7 +49,7 @@ function AppContent() {
 
   const tabHaptic = useCallback(() => {
     if (hapticEnabled) {
-      try { trigger(HapticFeedbackTypes.impactLight, { enableVibrateFallback: true, ignoreAndroidSystemSettings: false }); } catch (e) {}
+      try { trigger(HapticFeedbackTypes.impactMedium, { enableVibrateFallback: true, ignoreAndroidSystemSettings: true }); } catch (e) {}
     }
   }, [hapticEnabled]);
 

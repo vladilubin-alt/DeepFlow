@@ -139,7 +139,7 @@ export default function HomeScreen({ navigation }) {
 
   const hapticTap = useCallback(() => {
     if (hapticOn) {
-      try { trigger(HapticFeedbackTypes.impactLight, { enableVibrateFallback: true, ignoreAndroidSystemSettings: false }); } catch (e) {}
+      try { trigger(HapticFeedbackTypes.impactMedium, { enableVibrateFallback: true, ignoreAndroidSystemSettings: true }); } catch (e) {}
     }
   }, [hapticOn]);
 

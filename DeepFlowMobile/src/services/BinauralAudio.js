@@ -4,7 +4,7 @@ import { trigger, HapticFeedbackTypes } from 'react-native-haptic-feedback';
 
 const hapticOptions = {
   enableVibrateFallback: true,
-  ignoreAndroidSystemSettings: false,
+  ignoreAndroidSystemSettings: true,
 };
 
 export function useBinauralAudio() {
@@ -106,7 +106,7 @@ export function useBinauralAudio() {
 
   const vibrate = useCallback((pattern) => {
     try {
-      trigger(HapticFeedbackTypes.impactMedium, hapticOptions);
+      trigger(HapticFeedbackTypes.impactHeavy, hapticOptions);
     } catch (e) {}
   }, []);
 
