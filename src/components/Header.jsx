@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 function syncLabel(status) {
   switch (status) {
@@ -25,6 +26,11 @@ export default function Header({ syncStatus, onOpenVault }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isHistory = location.pathname === '/history';
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    window.location.reload();
+  };
 
   return (
     <header className="flex flex-row justify-between items-center gap-2 mb-1 sm:mb-6">
@@ -65,6 +71,15 @@ export default function Header({ syncStatus, onOpenVault }) {
           <span className="hidden sm:inline text-stone-500">|</span>
           <span className="hidden sm:inline text-champagne">local</span>
         </div>
+
+        <button
+          onClick={handleSignOut}
+          className="magnetic-btn px-2 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-mono-custom bg-deep-slate border border-slate-gray/60 text-stone-400 hover:text-red-400 hover:border-red-400/40 transition"
+          title="Sign Out"
+        >
+          <span className="hidden sm:inline">Sign Out</span>
+          <span className="sm:hidden">𝕏</span>
+        </button>
       </div>
     </header>
   );
