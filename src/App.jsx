@@ -295,6 +295,9 @@ export default function App() {
         targetWords={reportData?.targetWords ?? wordTarget}
         durationSeconds={reportData?.durationSeconds ?? 0}
         guillotined={reportData?.guillotined ?? false}
+        graceTokens={graceTokens}
+        onUseGraceToken={reportData?.guillotined ? handleUseGraceToken : undefined}
+        onGiveUp={reportData?.guillotined ? handleGiveUp : undefined}
       />
       <Routes>
       <Route path="/auth/confirm" element={<EmailConfirmed />} />

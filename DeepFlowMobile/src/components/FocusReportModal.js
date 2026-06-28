@@ -44,6 +44,9 @@ export default function FocusReportModal({
   targetWords,
   durationSeconds,
   guillotined,
+  graceTokens = 0,
+  onUseGraceToken,
+  onGiveUp,
 }) {
   const { colours } = useTheme();
   const [stats, setStats] = useState({ bestWpm: 0, totalWords: 0, totalSessions: 0, streak: 0 });
@@ -241,19 +244,55 @@ export default function FocusReportModal({
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={onDismiss}
-            style={{
-              borderRadius: 10,
-              paddingVertical: 12,
-              alignItems: 'center',
-              backgroundColor: colours.backgroundBase,
-            }}
-          >
-            <Text style={{ fontSize: 11, color: colours.textMuted, fontWeight: '400' }}>
-              Continue
-            </Text>
-          </TouchableOpacity>
+          {guillotined && onUseGraceToken && (
+            <TouchableOpacity
+              onPress={onUseGraceToken}
+              style={{
+                backgroundColor: colours.accentGold,
+                borderRadius: 10,
+                paddingVertical: 14,
+                alignItems: 'center',
+                marginBottom: 8,
+              }}
+            >
+              <Text style={{ fontSize: 13, color: colours.accentGoldText, fontWeight: '600' }}>
+                Use Grace Token ({graceTokens} left)
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {guillotined && onGiveUp && (
+            <TouchableOpacity
+              onPress={onGiveUp}
+              style={{
+                borderRadius: 10,
+                paddingVertical: 12,
+                alignItems: 'center',
+                backgroundColor: 'transparent',
+                borderWidth: 0.5,
+                borderColor: colours.textMuted + '40',
+                marginBottom: 8,
+              }}
+            >
+              <Text style={{ fontSize: 11, color: colours.textMuted }}>give up & clear</Text>
+            </TouchableOpacity>
+          )}
+
+          {!guillotined && (
+            <TouchableOpacity
+              onPress={onDismiss}
+              style={{
+                borderRadius: 10,
+                paddingVertical: 12,
+                alignItems: 'center',
+                backgroundColor: colours.backgroundBase,
+              }}
+            >
+              <Text style={{ fontSize: 11, color: colours.textMuted, fontWeight: '400' }}>
+                Continue
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </Modal>

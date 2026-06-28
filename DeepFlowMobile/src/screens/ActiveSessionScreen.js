@@ -437,6 +437,9 @@ export default function ActiveSessionScreen({ route, navigation }) {
         targetWords={reportData?.targetWords ?? targetWords}
         durationSeconds={reportData?.durationSeconds ?? 0}
         guillotined={reportData?.guillotined ?? false}
+        graceTokens={timerData.graceTokens}
+        onUseGraceToken={reportData?.guillotined ? useGraceToken : undefined}
+        onGiveUp={reportData?.guillotined ? giveUp : undefined}
       />
     </SafeAreaView>
   );
