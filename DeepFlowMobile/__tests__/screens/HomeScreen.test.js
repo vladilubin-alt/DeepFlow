@@ -1,3 +1,8 @@
+jest.mock('react-native-haptic-feedback', () => ({
+  trigger: jest.fn(),
+  HapticFeedbackTypes: { impactLight: 'impactLight', impactMedium: 'impactMedium', impactHeavy: 'impactHeavy' },
+}));
+
 jest.mock('react-native-purchases', () => ({
   __esModule: true,
   default: { configure: jest.fn() },
