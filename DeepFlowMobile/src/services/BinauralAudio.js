@@ -106,7 +106,22 @@ export function useBinauralAudio() {
 
   const vibrate = useCallback((pattern) => {
     try {
-      trigger(HapticFeedbackTypes.impactHeavy, hapticOptions);
+      if (Array.isArray(pattern)) {
+        let delay = 0;
+        for (let i = 1; i < pattern.length; i += 2) {
+          const pause = pattern[i - 1] || 0;
+          delay += pause;
+          const dur = pattern[i];
+          ((d) => {
+            setTimeout(() => {
+              try { trigger(HapticFeedbackTypes.impactHeavy, hapticOptions); } catch (_) {}
+            }, d);
+          })(delay);
+          delay += dur;
+        }
+      } else {
+        trigger(HapticFeedbackTypes.impactHeavy, hapticOptions);
+      }
     } catch (e) {}
   }, []);
 
