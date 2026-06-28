@@ -106,12 +106,16 @@ export function useBinauralAudio() {
       const pulses = Array.isArray(pattern)
         ? Math.max(2, Math.round(pattern.reduce((a, b, i) => i % 2 === 1 ? a + b : a, 0) / 100))
         : 3;
+      console.log('[Haptic] vibrate called, pulses:', pulses, 'pattern:', pattern);
       for (let i = 0; i < pulses; i++) {
         setTimeout(() => {
-          try { trigger(HapticFeedbackTypes.impactHeavy, hapticOpts); } catch (_) {}
+          try {
+            trigger(HapticFeedbackTypes.impactHeavy, hapticOpts);
+            console.log('[Haptic] pulse', i);
+          } catch (e) { console.warn('[Haptic] trigger error:', e.message); }
         }, i * 150);
       }
-    } catch (e) {}
+    } catch (e) { console.warn('[Haptic] vibrate error:', e.message); }
   }, []);
 
   useEffect(() => {

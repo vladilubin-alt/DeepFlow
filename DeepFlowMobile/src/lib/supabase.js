@@ -1,24 +1,40 @@
 import { createClient } from '@supabase/supabase-js';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import EncryptedStorage from 'react-native-encrypted-storage';
 import 'react-native-url-polyfill/auto';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config/env';
 
-const AsyncStorageAdapter = {
+// S-08: Use encrypted storage (Android Keystore / iOS Keychain) so auth tokens
+// are protected at rest instead of stored in plaintext AsyncStorage.
+// react-native-encrypted-storage wraps:
+//   Android → EncryptedSharedPreferences (AES-256-GCM via Keystore)
+//   iOS     → Keychain
+const EncryptedStorageAdapter = {
   getItem: async (key) => {
-    const value = await AsyncStorage.getItem(key);
-    return value;
+    try {
+      return await EncryptedStorage.getItem(key);
+    } catch {
+      return null;
+    }
   },
   setItem: async (key, value) => {
-    await AsyncStorage.setItem(key, value);
+    try {
+      await EncryptedStorage.setItem(key, value);
+    } catch (err) {
+      console.warn('[DeepFlow] EncryptedStorage.setItem failed:', err);
+    }
   },
   removeItem: async (key) => {
-    await AsyncStorage.removeItem(key);
+    try {
+      await EncryptedStorage.removeItem(key);
+    } catch (err) {
+      console.warn('[DeepFlow] EncryptedStorage.removeItem failed:', err);
+    }
   },
 };
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    storage: AsyncStorageAdapter,
+    storage: EncryptedStorageAdapter,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,

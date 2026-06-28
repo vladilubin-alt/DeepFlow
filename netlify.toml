@@ -5,6 +5,23 @@
 [build.environment]
   NODE_VERSION = "22"
 
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Prevent clickjacking (S-06)
+    X-Frame-Options = "DENY"
+    # Prevent MIME-type sniffing (S-16)
+    X-Content-Type-Options = "nosniff"
+    # Restrict referrer info (S-17)
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Restrict browser features (S-18)
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
+    # Force HTTPS for 2 years
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+    # Content Security Policy (S-05)
+    # unsafe-inline required for Vite-injected styles; tighten after adding nonce support
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; img-src * data: blob:; worker-src blob:; frame-ancestors 'none';"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

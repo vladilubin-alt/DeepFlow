@@ -259,6 +259,22 @@ export default function AuthScreen({ onAuth }) {
             >
               {loading ? '...' : isSignUp ? 'Create Account' : 'Sign In'}
             </button>
+
+            {/* S-03: Privacy consent (sign-up only) */}
+            {isSignUp && (
+              <p style={{ fontSize: 11, color: '#555', textAlign: 'center', marginTop: -8, marginBottom: 4, lineHeight: 1.6 }}>
+                By creating an account you agree to our{' '}
+                <a
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: '#EF9F27', textDecoration: 'none' }}
+                >
+                  Privacy Policy
+                </a>
+                .
+              </p>
+            )}
           </form>
 
           {/* Divider */}

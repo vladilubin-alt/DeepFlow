@@ -43,7 +43,8 @@ export default function SettingsScreen() {
   }, []);
 
   const handleSignOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    // S-07: scope:'global' revokes the server-side refresh token
+    await supabase.auth.signOut({ scope: 'global' });
   }, []);
 
   const toggleHaptic = useCallback(async () => {

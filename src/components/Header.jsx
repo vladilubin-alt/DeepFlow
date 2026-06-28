@@ -28,7 +28,9 @@ export default function Header({ syncStatus, onOpenVault }) {
   const isHistory = location.pathname === '/history';
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    // S-07: scope:'global' revokes the server-side refresh token so the
+    // session is truly invalidated — not just cleared from local storage.
+    await supabase.auth.signOut({ scope: 'global' });
     window.location.reload();
   };
 

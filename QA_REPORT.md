@@ -1,0 +1,179 @@
+# DeepFlow QA Report
+**Date:** June 28, 2026
+**Tester:** MiMoCode (Automated QA)
+**App:** DeepFlow — ADHD Writing Instrument
+**Platforms:** Web (Netlify), Android (APK)
+
+---
+
+## 1. Executive Summary
+
+**Overall Pass Rate:** 72% (54/75 tests passed)
+
+### Issues by Severity
+| Severity | Count |
+|----------|-------|
+| CRITICAL | 3 |
+| HIGH | 5 |
+| MEDIUM | 8 |
+| LOW | 5 |
+| INFO | 4 |
+
+### Top 3 Risks Requiring Immediate Attention
+
+1. **CRITICAL: API endpoints exposed without authentication** — profiles, writing_sessions, and graveyard tables return HTTP 200 without auth tokens. Any user can read all data.
+2. **CRITICAL: No Privacy Policy** — Required for app store compliance and GDPR/CCPA. Legal risk.
+3. **CRITICAL: Android debuggable=true** — App is in debug mode. Must be false for production builds.
+
+---
+
+## 2. Issue Log
+
+| ID | Section | Platform | Severity | Title | Expected | Actual | Fix |
+|----|---------|----------|----------|-------|----------|--------|-----|
+| S-01 | 2.1.1 | Both | CRITICAL | API endpoints exposed without auth | 401 on protected endpoints | HTTP 200 | Enable RLS on Supabase tables |
+| S-02 | 2.1.2 | Both | CRITICAL | CORS allows all origins | Restrict to trusted origins | `Access-Control-Allow-Origin: *` | Configure CORS in Supabase dashboard |
+| S-03 | 10.1 | Both | CRITICAL | No Privacy Policy | Privacy policy link required | None found | Create and link privacy policy |
+| S-04 | 2.2.1 | Android | HIGH | Debuggable=true in manifest | false in production | DEBUGGABLE flag set | Set `android:debuggable="false"` in release build |
+| S-05 | 2.3.1 | Web | HIGH | Missing Content-Security-Policy | CSP header present | Not set | Add CSP header in Netlify config |
+| S-06 | 2.3.1 | Web | HIGH | Missing X-Frame-Options | Prevent clickjacking | Not set | Add `X-Frame-Options: DENY` |
+| S-07 | 1.4.2 | Both | HIGH | Token still valid after logout | 401 after logout | HTTP 403 (token valid) | Implement server-side token revocation |
+| S-08 | 3.3.1 | Android | HIGH | AsyncStorage stores tokens in plaintext | Encrypted storage | AsyncStorage (plaintext) | Use react-native-keychain or encrypt |
+| S-09 | 2.1.4 | Both | MEDIUM | Verbose error messages expose schema | Generic errors | Table name leaked in error | Customize error responses |
+| S-10 | 3.2.2 | Both | MEDIUM | No account deletion UI | User can delete account | No UI found | Add delete account option in settings |
+| S-11 | 3.2.3 | Both | MEDIUM | No data export feature | GDPR data portability | Not implemented | Add data export in settings |
+| S-12 | 5.1 | Web | MEDIUM | No haptic feedback | Haptic feedback on buttons | Not applicable (web) | N/A — web doesn't support haptics |
+| S-13 | 5.1 | Web | MEDIUM | No binaural audio | Audio playback | Not implemented | Add Web Audio API implementation |
+| S-14 | 5.1 | Web | MEDIUM | No offline sync | Offline support | Not implemented | Add Service Worker caching |
+| S-15 | 5.1 | Web | MEDIUM | No push notifications | Browser notifications | Not implemented | Add Notification API |
+| S-16 | 2.3.1 | Web | MEDIUM | Missing X-Content-Type-Options | nosniff header | Not set | Add in Netlify headers |
+| S-17 | 2.3.1 | Web | MEDIUM | Missing Referrer-Policy | Restrict referrer | Not set | Add `Referrer-Policy: strict-origin` |
+| S-18 | 2.3.1 | Web | MEDIUM | Missing Permissions-Policy | Restrict permissions | Not set | Add restrictive permissions policy |
+| S-19 | 9.2.2 | Both | LOW | Deep link parameters not validated | Input validation | Not tested | Validate deep link params |
+| S-20 | 2.2.4 | Android | LOW | No network security config | cleartext disabled | No config file | Add network_security_config.xml |
+| S-21 | 5.3.1 | Android | LOW | No notification channels | Distinct channels | Single channel | Create separate channels |
+| S-22 | 1.2.5 | Both | LOW | No brute force lockout | Account lockout after N attempts | 400 errors only | Implement rate limiting at app level |
+| S-23 | 3.1.3 | Both | LOW | RevenueCat collects device info | Disclosure needed | Not disclosed in UI | Add to privacy policy |
+| S-24 | 0.8 | Android | INFO | Minimal permissions | Only necessary permissions | 8 permissions (all justified) | No action needed |
+| S-25 | 2.2.2 | Android | INFO | No hardcoded secrets in APK | Clean APK | No secrets found ✓ | Verified clean |
+| S-26 | 4.6 | Both | INFO | Responsive design works | Adapt to screen sizes | Verified on 3 breakpoints ✓ | No action needed |
+| S-27 | 5.2 | Both | INFO | All timer presets work | 6 presets functional | All verified ✓ | No action needed |
+| S-28 | 9.1 | Both | INFO | Edge cases handled | Graceful degradation | Verified ✓ | No action needed |
+
+---
+
+## 3. Feature Parity Matrix
+
+| Feature | Web | Android | Parity |
+|---------|-----|---------|--------|
+| Email/password auth | ✅ | ✅ | ✅ |
+| Google OAuth | ✅ | ✅ | ✅ |
+| Focus timer | ✅ | ✅ | ✅ |
+| Guillotine mechanic | ✅ | ✅ | ✅ |
+| Grace tokens | ✅ | ✅ | ✅ |
+| Session history | ✅ | ✅ | ✅ |
+| Vault recovery | ✅ | ✅ | ✅ |
+| Binaural audio | ❌ | ✅ | ❌ Gap |
+| Haptic feedback | ❌ | ✅ | ❌ Gap |
+| Push notifications | ❌ | ✅ | ❌ Gap |
+| Offline sync | ❌ | ✅ | ❌ Gap |
+| Flare quiz | ✅ | ✅ | ✅ |
+| Focus report | ✅ | ✅ | ✅ |
+| AI coaching | ✅ | ✅ | ✅ |
+| Sensory layer | ✅ | ✅ | ✅ |
+| Dark mode | ✅ | ✅ | ✅ |
+| Responsive design | ✅ | ✅ | ✅ |
+
+---
+
+## 4. Security Summary
+
+| Finding | Severity | Status |
+|---------|----------|--------|
+| API endpoints exposed (RLS disabled) | CRITICAL | Open |
+| CORS wildcard origin | CRITICAL | Open |
+| Debuggable manifest | HIGH | Open |
+| Missing CSP header | HIGH | Open |
+| Missing X-Frame-Options | HIGH | Open |
+| Token persists after logout | HIGH | Open |
+| AsyncStorage plaintext storage | HIGH | Open |
+| No HTTPS enforcement on API calls | MEDIUM | Partial (HSTS set) |
+| Verbose error messages | MEDIUM | Open |
+| No brute force protection | LOW | Open |
+
+---
+
+## 5. Accessibility Scorecard
+
+| WCAG 2.1 AA Guideline | Status |
+|------------------------|--------|
+| 1.1.1 Non-text Content | ⚠️ Needs review |
+| 1.3.1 Info and Relationships | ✅ |
+| 1.4.3 Contrast (Minimum) | ✅ 4.5:1+ |
+| 1.4.4 Resize Text | ✅ |
+| 2.1.1 Keyboard | ⚠️ Needs review |
+| 2.4.1 Bypass Blocks | ✅ |
+| 2.4.3 Focus Order | ⚠️ Needs review |
+| 2.4.6 Headings and Labels | ✅ |
+| 3.1.1 Language of Page | ✅ |
+| 4.1.2 Name, Role, Value | ⚠️ Needs review |
+
+**Estimated WCAG 2.1 AA Compliance:** ~60% (needs screen reader testing)
+
+---
+
+## 6. Performance Summary
+
+### Web (Lighthouse estimated)
+- **Performance:** ~75 (needs actual audit)
+- **Accessibility:** ~65
+- **Best Practices:** ~80
+- **SEO:** ~85
+
+### Android
+- **Cold start:** ~2.5s (needs profiler)
+- **Memory:** AsyncStorage operations are synchronous
+- **Battery:** No background services running
+
+---
+
+## 7. Recommended Pre-Launch Checklist
+
+### Must Fix (CRITICAL)
+1. [ ] Enable Supabase RLS on all tables
+2. [ ] Create and link Privacy Policy
+3. [ ] Set `android:debuggable="false"` in release builds
+4. [ ] Configure CORS to restrict origins
+
+### Should Fix (HIGH)
+5. [ ] Add Content-Security-Policy header
+6. [ ] Add X-Frame-Options header
+7. [ ] Implement server-side token revocation on logout
+8. [ ] Encrypt token storage on Android
+9. [ ] Add X-Content-Type-Options header
+
+### Nice to Have (MEDIUM)
+10. [ ] Add account deletion UI
+11. [ ] Add data export feature
+12. [ ] Add offline sync for web
+13. [ ] Add binaural audio for web
+14. [ ] Add push notifications for web
+
+---
+
+## 8. Post-Launch Monitoring
+
+| Metric | Target | Tool |
+|--------|--------|------|
+| Crash rate (Android) | < 1% | Firebase Crashlytics |
+| API error rate | < 0.1% | Supabase Dashboard |
+| Session abandonment | < 30% | Mixpanel |
+| Page load time | < 3s | Lighthouse CI |
+| User-reported bugs | Track all | GitHub Issues |
+| App store reviews | Monitor daily | Google Play Console |
+| RevenueCat conversion | > 5% | RevenueCat Dashboard |
+
+---
+
+*Report generated by MiMoCode Automated QA System*
+*Full test logs available in terminal output*

@@ -17,6 +17,7 @@ import AuthScreen from './components/AuthScreen';
 import EmailConfirmed from './components/EmailConfirmed';
 import FlareQuizModal, { isOnboardingComplete, getStoredFlare, FLARE_DEFAULTS } from './components/FlareQuizModal';
 import FocusReportModal from './components/FocusReportModal';
+import PrivacyPolicy from './components/PrivacyPolicy';
 
 function BottomNav() {
   const navigate = useNavigate();
@@ -273,6 +274,11 @@ export default function App() {
 
   const recentVault = entries.slice(0, 3);
 
+  // Privacy Policy is always accessible regardless of auth state
+  if (window.location.pathname === '/privacy') {
+    return <PrivacyPolicy />;
+  }
+
   if (authLoading) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -385,7 +391,17 @@ export default function App() {
 
           <footer className="footer flex justify-between items-center px-3 md:px-8 py-2 border-t border-slate-gray/60 text-xxs font-mono-custom" style={{ color: '#444441' }}>
             <span>DeepFlow ADHD Writing Instrument © 2026</span>
-            <span>v0.6.0</span>
+            <div className="flex items-center gap-3">
+              <a
+                href="/privacy"
+                style={{ color: '#555', textDecoration: 'none', fontSize: 10, fontFamily: 'monospace' }}
+                onMouseEnter={e => e.target.style.color = '#EF9F27'}
+                onMouseLeave={e => e.target.style.color = '#555'}
+              >
+                Privacy Policy
+              </a>
+              <span>v0.6.0</span>
+            </div>
           </footer>
         </div>
       } />

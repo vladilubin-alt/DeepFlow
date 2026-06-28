@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Network Security Config (S-20)
+  - Blocks all cleartext (HTTP) traffic in production.
+  - Allows cleartext ONLY for localhost (Metro bundler in development).
+  - All API calls to Supabase go through HTTPS — enforced here.
+-->
+<network-security-config>
+
+  <!-- Default: HTTPS only, trust system CAs, no cleartext -->
+  <base-config cleartextTrafficPermitted="false">
+    <trust-anchors>
+      <certificates src="system" />
+    </trust-anchors>
+  </base-config>
+
+  <!-- Exception: Metro bundler needs cleartext on localhost during development -->
+  <domain-config cleartextTrafficPermitted="true">
+    <domain includeSubdomains="false">localhost</domain>
+    <domain includeSubdomains="false">10.0.2.2</domain>
+    <domain includeSubdomains="false">10.0.3.2</domain>
+  </domain-config>
+
+</network-security-config>
