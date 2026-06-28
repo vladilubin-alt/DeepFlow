@@ -1,12 +1,8 @@
 import { useRef, useEffect, useCallback } from 'react';
-import { Vibration } from 'react-native';
 import { AudioContext } from 'react-native-audio-api';
+import { trigger, HapticFeedbackTypes } from 'react-native-haptic-feedback';
 
-let hapticTrigger = null;
-try {
-  const haptic = require('react-native-haptic-feedback');
-  hapticTrigger = haptic.trigger;
-} catch (e) {}
+const hapticOpts = { enableVibrateFallback: true, ignoreAndroidSystemSettings: true };
 
 export function useBinauralAudio() {
   const ctxRef = useRef(null);
@@ -107,10 +103,13 @@ export function useBinauralAudio() {
 
   const vibrate = useCallback((pattern) => {
     try {
-      if (Array.isArray(pattern)) {
-        Vibration.vibrate(pattern);
-      } else {
-        Vibration.vibrate(100);
+      const pulses = Array.isArray(pattern)
+        ? Math.max(2, Math.round(pattern.reduce((a, b, i) => i % 2 === 1 ? a + b : a, 0) / 100))
+        : 3;
+      for (let i = 0; i < pulses; i++) {
+        setTimeout(() => {
+          try { trigger(HapticFeedbackTypes.impactHeavy, hapticOpts); } catch (_) {}
+        }, i * 150);
       }
     } catch (e) {}
   }, []);
