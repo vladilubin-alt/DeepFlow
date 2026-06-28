@@ -201,14 +201,14 @@ export default function ActiveSessionScreen({ route, navigation }) {
       setState(entry.to);
       if (entry.to === STATES.WARNING) {
         binaural.updateState('warning');
-        if (hapticRef.current) binaural.vibrate([0, 100, 50, 100]);
+        if (hapticRef.current) binaural.vibrate([0, 110, 60, 110]);
       } else if (entry.to === STATES.GUILLOTINED) {
         binaural.updateState('guillotined');
-        if (hapticRef.current) binaural.vibrate([0, 200, 100, 200, 100, 200]);
+        if (hapticRef.current) binaural.vibrate([0, 200, 100, 200, 0, 200, 100, 200]);
         track('Session Guillotined', { durationMinutes, targetWords, wordsWritten: entry.ctx.wordsWritten });
       } else if (entry.to === STATES.COMPLETED) {
         binaural.updateState('completed');
-        if (hapticRef.current) binaural.vibrate([0, 100, 50, 100, 50, 100, 50, 300]);
+        if (hapticRef.current) binaural.vibrate([0, 200, 100, 200, 0, 200, 100, 200]);
         track('Session Completed', { durationMinutes, targetWords, wordsWritten: entry.ctx.wordsWritten });
       } else if (entry.to === STATES.SAVED_BY_GRACE) {
         binaural.updateState('writing');
@@ -275,6 +275,20 @@ export default function ActiveSessionScreen({ route, navigation }) {
       timerRef.current = null;
     };
   }, [durationMinutes, targetWords]);
+
+  // Repeating haptic during warning state
+  const warningHapticRef = useRef(null);
+  useEffect(() => {
+    if (state === STATES.WARNING && hapticRef.current) {
+      binaural.vibrate([0, 110, 60, 110]);
+      warningHapticRef.current = setInterval(() => {
+        if (hapticRef.current) binaural.vibrate([0, 110, 60, 110]);
+      }, 3000);
+    } else {
+      if (warningHapticRef.current) { clearInterval(warningHapticRef.current); warningHapticRef.current = null; }
+    }
+    return () => { if (warningHapticRef.current) { clearInterval(warningHapticRef.current); warningHapticRef.current = null; } };
+  }, [state, binaural]);
 
   // Nudge logic: trigger during idle warning, not during writing
   useEffect(() => {
