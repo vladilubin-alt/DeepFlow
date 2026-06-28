@@ -13,6 +13,7 @@ import SessionSetup from './components/SessionSetup';
 import SensoryLayer from './components/SensoryLayer';
 import VaultModal from './components/VaultModal';
 import HistoryView from './components/HistoryView';
+import AuthScreen from './components/AuthScreen';
 import EmailConfirmed from './components/EmailConfirmed';
 import FlareQuizModal, { isOnboardingComplete, getStoredFlare, FLARE_DEFAULTS } from './components/FlareQuizModal';
 import FocusReportModal from './components/FocusReportModal';
@@ -90,6 +91,8 @@ export default function App() {
   const audio = useBinauralAudio();
   const prevStateRef = useRef(sessionState);
 
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [flareId, setFlareId] = useState(null);
   const [showQuiz, setShowQuiz] = useState(false);
 
@@ -160,21 +163,28 @@ export default function App() {
   }, [sessionState, audio, duration, wordTarget, wordCount, graceTokens, timerData]);
 
   useEffect(() => {
-    supabase.auth.signInAnonymously().then(({ data, error }) => {
-      if (error) {
-        console.warn('[Auth] signInAnonymously failed, falling back to local:', error.message);
-        setReady(true);
-        return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user);
+        setUserId(session.user.id);
+        setAuth(session.user.id, session.access_token);
+        identify(session.user.id);
+        track('App Opened', { userId: session.user.id });
       }
-      const { user, session } = data;
-      if (user && session) {
-        setUserId(user.id);
-        setAuth(user.id, session.access_token);
-        identify(user.id);
-        track('App Opened', { userId: user.id });
-      }
-      setReady(true);
+      setAuthLoading(false);
     });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        setUserId(session.user.id);
+        setAuth(session.user.id, session.access_token);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => subscription?.unsubscribe();
   }, [setAuth]);
 
   useEffect(() => {
@@ -259,6 +269,18 @@ export default function App() {
   const isDanger = sessionState === 'guillotined';
 
   const recentVault = entries.slice(0, 3);
+
+  if (authLoading) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: '#666', fontSize: 14 }}>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthScreen onAuth={(session) => { setUser(session.user); setAuth(session.user.id, session.access_token); }} />;
+  }
 
   return (
     <>
