@@ -17,7 +17,7 @@ export default function AuthScreen({ colours }) {
     setLoading(true);
     try {
       const { error } = isSignUp
-        ? await supabase.auth.signUp({ email, password })
+        ? await supabase.auth.signUp({ email, password, options: { emailRedirectTo: 'https://deepflow.app/auth/confirm' } })
         : await supabase.auth.signInWithPassword({ email, password });
       if (error) Alert.alert('Auth Error', error.message);
     } catch (e) {

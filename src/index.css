@@ -351,6 +351,7 @@
   40% { border-radius: 50% 60% 30% 40% / 40% 50% 60% 50%; }
   60% { border-radius: 70% 30% 50% 50% / 30% 70% 40% 60%; }
   80% { border-radius: 40% 50% 60% 30% / 60% 40% 50% 70%; }
+  }
 }
 
 @keyframes blob-pulse {

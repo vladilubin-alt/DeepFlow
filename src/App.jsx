@@ -13,6 +13,7 @@ import SessionSetup from './components/SessionSetup';
 import SensoryLayer from './components/SensoryLayer';
 import VaultModal from './components/VaultModal';
 import HistoryView from './components/HistoryView';
+import EmailConfirmed from './components/EmailConfirmed';
 import FlareQuizModal, { isOnboardingComplete, getStoredFlare, FLARE_DEFAULTS } from './components/FlareQuizModal';
 import FocusReportModal from './components/FocusReportModal';
 
@@ -271,6 +272,7 @@ export default function App() {
         guillotined={reportData?.guillotined ?? false}
       />
       <Routes>
+      <Route path="/auth/confirm" element={<EmailConfirmed />} />
       <Route path="/history" element={<HistoryView />} />
       <Route path="/" element={
         <div className="h-screen flex flex-col">
