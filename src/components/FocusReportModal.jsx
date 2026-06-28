@@ -1,5 +1,50 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { track } from '../lib/analytics';
+
+function Confetti() {
+  const [particles, setParticles] = useState([]);
+
+  useEffect(() => {
+    const colors = ['#EF9F27', '#4ade80', '#C9A84C', '#E24B4A', '#8B5CF6', '#06B6D4'];
+    const newParticles = Array.from({ length: 50 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      delay: Math.random() * 0.5,
+      duration: 1.5 + Math.random() * 1.5,
+      size: 6 + Math.random() * 6,
+      rotation: Math.random() * 360,
+    }));
+    setParticles(newParticles);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-[60] overflow-hidden">
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          style={{
+            position: 'absolute',
+            left: `${p.x}%`,
+            top: '-10px',
+            width: p.size,
+            height: p.size,
+            backgroundColor: p.color,
+            borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+            animation: `confetti-fall ${p.duration}s ease-in ${p.delay}s forwards`,
+            transform: `rotate(${p.rotation}deg)`,
+          }}
+        />
+      ))}
+      <style>{`
+        @keyframes confetti-fall {
+          0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+          100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
+        }
+      `}</style>
+    </div>
+  );
+}
 
 function calcFocusScore(wordsWritten, targetWords, durationSeconds, guillotined) {
   const durationMin = durationSeconds / 60;
@@ -58,6 +103,7 @@ export default function FocusReportModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-obsidian/80 backdrop-blur-md p-4">
+      {focusScore >= 80 && <Confetti />}
       <div className="glass-panel rounded-[2rem] w-full max-w-md p-6 md:p-8">
         <div className="text-center mb-6">
           <h2 className="text-xl text-ivory font-serif mb-1">

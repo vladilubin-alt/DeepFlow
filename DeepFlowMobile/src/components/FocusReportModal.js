@@ -1,9 +1,86 @@
-import React, { useCallback, useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, Modal, ScrollView, Animated, Dimensions } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { track } from '../services/AnalyticsService';
 import { supabase } from '../lib/supabase';
 import Superwall from '@superwall/react-native-superwall';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const CONFETTI_COLORS = ['#EF9F27', '#4ade80', '#C9A84C', '#E24B4A', '#8B5CF6', '#06B6D4'];
+
+function ConfettiParticle({ color, delay, startX }) {
+  const translateY = useRef(new Animated.Value(-20)).current;
+  const translateX = useRef(new Animated.Value(0)).current;
+  const rotate = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.delay(delay * 1000),
+      Animated.parallel([
+        Animated.timing(translateY, {
+          toValue: SCREEN_HEIGHT + 50,
+          duration: 2500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateX, {
+          toValue: (Math.random() - 0.5) * 100,
+          duration: 2500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(rotate, {
+          toValue: 720,
+          duration: 2500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 2500,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        left: startX,
+        top: -10,
+        width: 8,
+        height: 8,
+        backgroundColor: color,
+        borderRadius: Math.random() > 0.5 ? 4 : 2,
+        transform: [
+          { translateY },
+          { translateX },
+          { rotate: rotate.interpolate({ inputRange: [0, 360, 720], outputRange: ['0deg', '360deg', '720deg'] }) },
+        ],
+        opacity,
+      }}
+    />
+  );
+}
+
+function Confetti() {
+  const particles = useRef(
+    Array.from({ length: 40 }, (_, i) => ({
+      id: i,
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      delay: Math.random() * 0.5,
+      startX: Math.random() * SCREEN_WIDTH,
+    }))
+  ).current;
+
+  return (
+    <View style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 60 }}>
+      {particles.map((p) => (
+        <ConfettiParticle key={p.id} color={p.color} delay={p.delay} startX={p.startX} />
+      ))}
+    </View>
+  );
+}
 
 function calcFocusScore(wordsWritten, targetWords, durationSeconds, guillotined) {
   const durationMin = durationSeconds / 60;
@@ -139,6 +216,7 @@ export default function FocusReportModal({
       animationType="fade"
       onRequestClose={onDismiss}
     >
+      {focusScore >= 80 && <Confetti />}
       <View style={{
         flex: 1,
         justifyContent: 'center',
