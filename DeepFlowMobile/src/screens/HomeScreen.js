@@ -43,8 +43,8 @@ function calcStreak(sessions) {
 
 export default function HomeScreen({ navigation }) {
   const { colours } = useTheme();
-  const [durationIdx, setDurationIdx] = useState(1);
-  const [wordTargetIdx, setWordTargetIdx] = useState(1);
+  const [durationIdx, setDurationIdx] = useState(0);
+  const [wordTargetIdx, setWordTargetIdx] = useState(0);
   const [sensoryIdx, setSensoryIdx] = useState(0);
   const [aiModeIdx, setAiModeIdx] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -138,7 +138,7 @@ export default function HomeScreen({ navigation }) {
 
   const hapticTap = useCallback(() => {
     if (hapticOn) {
-      try { Vibration.vibrate(50); } catch (e) {}
+      try { Vibration.vibrate(100); } catch (e) { console.warn('[Haptic] error:', e.message); }
     }
   }, [hapticOn]);
 

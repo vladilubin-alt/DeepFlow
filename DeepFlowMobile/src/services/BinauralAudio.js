@@ -45,23 +45,27 @@ export function useBinauralAudio() {
       gain.gain.value = 0.08;
       gainRef.current = gain;
 
-      const merger = ctx.createChannelMerger(2);
-      mergerRef.current = merger;
-
       const baseFreq = mode === 'alpha' ? 200 : 220;
       const beatFreq = mode === 'alpha' ? 6 : 14;
 
       const leftOsc = ctx.createOscillator();
       leftOsc.frequency.value = baseFreq;
       leftOsc.type = 'sine';
-      leftOsc.connect(merger, 0, 0);
 
       const rightOsc = ctx.createOscillator();
       rightOsc.frequency.value = baseFreq + beatFreq;
       rightOsc.type = 'sine';
-      rightOsc.connect(merger, 0, 1);
 
-      merger.connect(gain);
+      if (typeof ctx.createChannelMerger === 'function') {
+        const merger = ctx.createChannelMerger(2);
+        mergerRef.current = merger;
+        try { leftOsc.connect(merger, 0, 0); } catch (_) { leftOsc.connect(merger); }
+        try { rightOsc.connect(merger, 0, 1); } catch (_) { rightOsc.connect(merger); }
+        merger.connect(gain);
+      } else {
+        leftOsc.connect(gain);
+        rightOsc.connect(gain);
+      }
       gain.connect(ctx.destination);
 
       leftOsc.start();
