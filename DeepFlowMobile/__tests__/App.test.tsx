@@ -67,6 +67,11 @@ jest.mock('../src/services/SuperwallService', () => ({
   initSuperwall: jest.fn(),
 }));
 
+jest.mock('@superwall/react-native-superwall', () => ({
+  __esModule: true,
+  default: { register: jest.fn(), identify: jest.fn() },
+}));
+
 jest.mock('../src/theme/ThemeContext', () => ({
   ThemeProvider: ({ children }) => children,
   useTheme: () => ({
