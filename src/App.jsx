@@ -170,6 +170,7 @@ export default function App() {
         setAuth(session.user.id, session.access_token);
         identify(session.user.id);
         track('App Opened', { userId: session.user.id });
+        setReady(true);
       }
       setAuthLoading(false);
     });
@@ -179,8 +180,10 @@ export default function App() {
         setUser(session.user);
         setUserId(session.user.id);
         setAuth(session.user.id, session.access_token);
+        setReady(true);
       } else {
         setUser(null);
+        setReady(false);
       }
     });
 
@@ -279,7 +282,7 @@ export default function App() {
   }
 
   if (!user) {
-    return <AuthScreen onAuth={(session) => { setUser(session.user); setAuth(session.user.id, session.access_token); }} />;
+    return <AuthScreen onAuth={(session) => { setUser(session.user); setAuth(session.user.id, session.access_token); setReady(true); }} />;
   }
 
   return (
