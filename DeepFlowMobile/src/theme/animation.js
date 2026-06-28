@@ -1,0 +1,76 @@
+/**
+ * Animation constants — single source of truth for all motion.
+ * Adjust values here to tune the system globally.
+ */
+
+export const DURATION = {
+  splashFadeIn: 400,
+  splashPulse: 800,
+  splashFadeOut: 300,
+  progressBarFadeIn: 300,
+  navigationPush: 320,
+  navigationPop: 320,
+  modalSlideUp: 350,
+  modalSlideDown: 280,
+  modalScrimIn: 350,
+  modalScrimOut: 280,
+  tabCrossfade: 200,
+  homeStagger: 40,
+  staggerDelayFirst: 100,
+  cardExpand: 280,
+  cardCollapse: 280,
+  checkboxStroke: 200,
+  strikethrough: 250,
+  cardRemoveHeight: 260,
+  digitRoll: 180,
+  buttonPress: 100,
+  buttonSpringBack: 200,
+  arcOverfill: 200,
+  rippleExpand: 600,
+  completionFade: 300,
+  fadeIn: 300,
+  fadeOut: 200,
+  shakeTotal: 300,
+  shakeOscillation: 40,
+  inputFocusBorder: 200,
+  pulseBreathe: 2500,
+  progressBarFill: 400,
+  confetti: 2500,
+  barChartFill: 600,
+};
+
+export const EASING = {
+  standard: { fn: 'outEase' },
+  decelerate: { fn: 'outEase' },
+  accelerate: { fn: 'inEase' },
+  material: {
+    standard: 'cubic-bezier(0.4, 0.0, 0.2, 1)',
+    decelerate: 'cubic-bezier(0.0, 0.0, 0.2, 1)',
+    accelerate: 'cubic-bezier(0.4, 0.0, 1, 1)',
+    sharpDecelerate: 'cubic-bezier(0.0, 0.0, 0.2, 1)',
+  },
+  spring: {
+    damp: { friction: 8, tension: 40 },
+    bouncy: { friction: 5, tension: 50 },
+    gentle: { friction: 20, tension: 30 },
+    wobbly: { friction: 2, tension: 40 },
+  },
+};
+
+export const ELEVATION = {
+  cardResting: 2,
+  cardPressed: 8,
+  fabResting: 6,
+  fabPressed: 12,
+  bottomSheet: 16,
+  appBar: 4,
+};
+
+export const HAPTICS = {
+  light: 'impactLight',
+  medium: 'impactMedium',
+  heavy: 'impactHeavy',
+  tick: 'selection',
+  error: 'notificationError',
+  success: 'notificationSuccess',
+};
