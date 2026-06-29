@@ -34,13 +34,13 @@ export function useGraveyard() {
         .limit(limit);
 
       if (err) {
-        setError(err.message);
+        setError('Could not load vault entries.');
         setEntries([]);
       } else {
         setEntries(data || []);
       }
     } catch (e) {
-      setError(e.message);
+      setError('Could not load vault entries.');
       setEntries([]);
     } finally {
       setLoading(false);

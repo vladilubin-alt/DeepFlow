@@ -18,6 +18,8 @@ import EmailConfirmed from './components/EmailConfirmed';
 import FlareQuizModal, { isOnboardingComplete, getStoredFlare, FLARE_DEFAULTS } from './components/FlareQuizModal';
 import FocusReportModal from './components/FocusReportModal';
 import PrivacyPolicy from './components/PrivacyPolicy';
+import CookieConsent from './components/CookieConsent';
+import { enableAnalytics } from './lib/analytics';
 
 function BottomNav() {
   const navigate = useNavigate();
@@ -46,6 +48,9 @@ function BottomNav() {
           key={item.icon}
           onClick={() => handleNav(item)}
           className={`bottom-nav-item ${isActive(item.path) && item.action !== 'vault' ? 'active' : ''}`}
+          aria-label={item.label}
+          role="tab"
+          aria-selected={isActive(item.path) && item.action !== 'vault'}
         >
           <span className="material-icons">{item.icon}</span>
           <span>{item.label}</span>
@@ -123,7 +128,12 @@ export default function App() {
   const [duration, setDuration] = useState(25);
   const [wordTarget, setWordTarget] = useState(300);
   const [aiMode, setAiMode] = useState('coach');
-  const [text, setText] = useState('');
+  const [text, setText] = useState(() => {
+    try {
+      const saved = localStorage.getItem('deepflow_draft');
+      return saved ? JSON.parse(saved).content || '' : '';
+    } catch { return ''; }
+  });
   const [frequency, setFrequency] = useState('off');
   const [isMuted, setIsMuted] = useState(false);
   const [userId, setUserId] = useState(null);
@@ -133,6 +143,14 @@ export default function App() {
   const [ready, setReady] = useState(false);
 
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+
+  useEffect(() => {
+    if (!text) return;
+    const timeout = setTimeout(() => {
+      localStorage.setItem('deepflow_draft', JSON.stringify({ content: text, savedAt: Date.now() }));
+    }, 3000);
+    return () => clearTimeout(timeout);
+  }, [text]);
 
   useEffect(() => {
     if (prevStateRef.current !== sessionState) {
@@ -246,6 +264,8 @@ export default function App() {
   const dismissFocusReport = useCallback(() => {
     setShowFocusReport(false);
     setReportData(null);
+    localStorage.removeItem('deepflow_draft');
+    setText('');
   }, []);
 
   const handleFrequencyChange = useCallback((mode) => {
@@ -293,7 +313,7 @@ export default function App() {
 
   return (
     <>
-      {showQuiz && <FlareQuizModal onComplete={handleQuizComplete} />}
+      {showQuiz && <FlareQuizModal onComplete={handleQuizComplete} role="dialog" aria-modal="true" aria-label="Flare type selection" />}
       <FocusReportModal
         visible={showFocusReport}
         onDismiss={dismissFocusReport}
@@ -406,6 +426,7 @@ export default function App() {
         </div>
       } />
     </Routes>
+    <CookieConsent onConsent={(c) => { if (c === 'accepted') enableAnalytics(); }} />
     </>
   );
 }

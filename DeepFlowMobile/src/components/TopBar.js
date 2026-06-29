@@ -1,8 +1,12 @@
 import { View, Text } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 
-export default function TopBar({ labelRight, dotColour, subtitle }) {
+export default function TopBar({ labelRight, dotColour, subtitle, isConnected, pendingSync }) {
   const { colours } = useTheme();
+  const dotColor = isConnected === false ? colours.stateDanger : (dotColour || colours.stateSuccess);
+  const label = labelRight || (isConnected === false ? 'Offline' : 'Connected');
+  const syncInfo = pendingSync > 0 ? ` · ${pendingSync} pending` : '';
+
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, paddingBottom: 4 }}>
       <View>
@@ -14,8 +18,8 @@ export default function TopBar({ labelRight, dotColour, subtitle }) {
         </Text>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: dotColour || colours.stateSuccess }} />
-        <Text style={{ fontSize: 10, color: colours.textMuted }}>{labelRight || 'Connected'}</Text>
+        <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: dotColor }} />
+        <Text style={{ fontSize: 10, color: colours.textMuted }}>{label}{syncInfo}</Text>
       </View>
     </View>
   );

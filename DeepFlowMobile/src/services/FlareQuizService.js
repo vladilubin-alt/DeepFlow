@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Purchases from 'react-native-purchases';
-import Superwall from '@superwall/react-native-superwall';
 import { supabase } from '../lib/supabase';
 
 export const FLARE_STORAGE_KEY = '@deepflow/flare';
@@ -40,16 +39,11 @@ export async function completeOnboarding(flare) {
   }
 }
 
-export async function presentFlareQuiz() {
-  try {
-    await Superwall.register({
-      placement: 'onboarding_flare_quiz',
-      feature: () => {
-        completeOnboarding('time_warp');
-      },
-    });
-  } catch (e) {
-    console.warn('[FlareQuiz] Presentation failed:', e.message);
-    await completeOnboarding('time_warp');
-  }
-}
+export const FLARES = [
+  { id: 'time_warp', label: 'Time Warp', emoji: '⏰', description: 'You lose track of time when hyperfocused' },
+  { id: 'phantom_writer', label: 'Phantom Writer', emoji: '👻', description: 'You write best in bursts, then vanish' },
+  { id: 'overthinker', label: 'Overthinker', emoji: '🧠', description: 'You rewrite the same sentence 10 times' },
+  { id: 'chaos_crafter', label: 'Chaos Crafter', emoji: '🌪️', description: 'Your best ideas come from controlled chaos' },
+  { id: 'deep_diver', label: 'Deep Diver', emoji: '🤿', description: 'You need total immersion to write' },
+  { id: 'deadline_demon', label: 'Deadline Demon', emoji: '😈', description: 'Pressure is your fuel' },
+];

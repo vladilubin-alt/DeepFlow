@@ -37,6 +37,9 @@ export default function SessionSetup({
               onClick={() => onDurationChange([3, 5, 10, 25, 45, 60][i])}
               disabled={!isIdle}
               className={`seg-opt ${durationIdx === i ? 'seg-active' : ''} ${!isIdle ? 'opacity-40 cursor-not-allowed' : ''}`}
+              aria-label={`Set duration to ${opt}`}
+              role="radio"
+              aria-checked={durationIdx === i}
             >
               {opt}
             </button>
@@ -53,6 +56,9 @@ export default function SessionSetup({
               onClick={() => onTargetChange([25, 50, 100, 300, 500, 750][i])}
               disabled={!isIdle}
               className={`seg-opt ${targetIdx === i ? 'seg-active' : ''} ${!isIdle ? 'opacity-40 cursor-not-allowed' : ''}`}
+              aria-label={`Set word target to ${opt}`}
+              role="radio"
+              aria-checked={targetIdx === i}
             >
               {opt}
             </button>
@@ -69,6 +75,9 @@ export default function SessionSetup({
               onClick={() => onAiModeChange(opt)}
               disabled={!isIdle}
               className={`seg-opt ${aiIdx === i ? 'seg-active' : ''} ${!isIdle ? 'opacity-40 cursor-not-allowed' : ''}`}
+              aria-label={`Set AI mode to ${opt}`}
+              role="radio"
+              aria-checked={aiIdx === i}
             >
               {opt}
             </button>
@@ -80,6 +89,7 @@ export default function SessionSetup({
         onClick={onStart}
         disabled={!isIdle || !ready}
         className="magnetic-btn w-full py-3 rounded-xl bg-champagne text-obsidian font-bold font-sans text-sm uppercase tracking-[0.12em] hover:brightness-110 transition disabled:opacity-30 disabled:cursor-not-allowed"
+        aria-label={isIdle ? 'Start writing session' : 'Session in progress'}
       >
         {!ready ? 'Connecting...' : isIdle ? 'Start Session' : 'Session in Progress…'}
       </button>

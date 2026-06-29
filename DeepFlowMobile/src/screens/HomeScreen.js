@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { trigger, HapticFeedbackTypes } from 'react-native-haptic-feedback';
 import { useTheme } from '../theme/ThemeContext';
+import { useHaptic } from '../theme/HapticContext';
 import TopBar from '../components/TopBar';
 import StatStrip from '../components/StatStrip';
 import SegmentedControl from '../components/SegmentedControl';
@@ -129,13 +130,7 @@ export default function HomeScreen({ navigation }) {
     fetchVault();
   }, []);
 
-  const [hapticOn, setHapticOn] = useState(true);
-
-  useEffect(() => {
-    AsyncStorage.getItem('@deepflow/settings/haptic').then(v => {
-      if (v !== null) setHapticOn(v === 'true');
-    });
-  }, []);
+  const { enabled: hapticOn } = useHaptic();
 
   const hapticTap = useCallback(() => {
     if (hapticOn) {
@@ -181,6 +176,8 @@ export default function HomeScreen({ navigation }) {
 
         <TouchableOpacity
           onPress={() => { hapticTap(); startSession(); }}
+          accessibilityLabel="Start a writing session"
+          accessibilityRole="button"
           style={{
             backgroundColor: colours.accentGold,
             borderRadius: 8,
@@ -204,6 +201,8 @@ export default function HomeScreen({ navigation }) {
               <TouchableOpacity
                 key={item.id}
                 onPress={() => navigation.navigate('Vault')}
+                accessibilityLabel={`Draft: ${(item.content || '').slice(0, 50) || 'Untitled draft'}, ${item.word_count} words. Tap to view vault`}
+                accessibilityRole="button"
                 style={{
                   backgroundColor: colours.backgroundSurface,
                   borderRadius: 8,

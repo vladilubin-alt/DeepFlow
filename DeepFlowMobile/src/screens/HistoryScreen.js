@@ -266,6 +266,9 @@ export default function HistoryScreen() {
               key={s.id}
               onPress={() => setSelected(isSelected ? null : s)}
               activeOpacity={0.7}
+              accessibilityLabel={`Session: ${s.words_written} words, ${badge.label}. Double tap for details`}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
               style={{
                 backgroundColor: isSelected ? colours.backgroundRaised : colours.backgroundSurface,
                 borderRadius: 12,

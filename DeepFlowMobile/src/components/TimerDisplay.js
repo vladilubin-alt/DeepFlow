@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Animated, Easing, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { trigger, HapticFeedbackTypes } from 'react-native-haptic-feedback';
 import { useTheme } from '../theme/ThemeContext';
+import { useHaptic } from '../theme/HapticContext';
 import { DURATION, HAPTICS } from '../theme/animation';
 import ProgressBar from './ProgressBar';
 
@@ -38,13 +38,7 @@ export default function TimerDisplay({ remainingMs, wordsWritten, targetWords, e
   const [displayedMins, setDisplayedMins] = useState(mins);
   const [nextMins, setNextMins] = useState(mins);
 
-  const [hapticOn, setHapticOn] = useState(true);
-
-  useEffect(() => {
-    AsyncStorage.getItem('@deepflow/settings/haptic').then(v => {
-      if (v !== null) setHapticOn(v === 'true');
-    });
-  }, []);
+  const { enabled: hapticOn } = useHaptic();
 
   // Standard fraction progress update
   useEffect(() => {

@@ -5,7 +5,7 @@ export default function AiNudge({ prompt, onDismiss }) {
   const { colours } = useTheme();
   if (!prompt) return null;
   return (
-    <TouchableOpacity onPress={onDismiss} style={{
+    <TouchableOpacity onPress={onDismiss} accessibilityLabel={`AI coaching tip: ${prompt}. Double tap to dismiss`} accessibilityRole="alert" style={{
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: '#1a1506',

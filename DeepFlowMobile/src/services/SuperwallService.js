@@ -6,14 +6,11 @@ import { SUPERWALL_API_KEY, REVENUECAT_API_KEY } from '../config/env';
 
 let initialized = false;
 
-// Diagnostic: check if native module is available
 const hasNativeModule = !!NativeModules.SuperwallReactNative;
-console.log('[Superwall] Native module available:', hasNativeModule);
 
 async function initRevenueCat() {
   try {
     await Purchases.configure({ apiKey: REVENUECAT_API_KEY });
-    console.log('[RevenueCat] Initialized');
   } catch (e) {
     console.warn('[RevenueCat] Init failed:', e.message);
   }
@@ -29,13 +26,10 @@ function createPurchaseController() {
         }
         return { type: 'cancelled', toJSON() { return { type: 'cancelled' }; } };
       } catch (e) {
-        if (e.userCancelled) {
-          return { type: 'cancelled', toJSON() { return { type: 'cancelled' }; } };
-        }
-        return { type: 'failed', error: e.message, toJSON() { return { type: 'failed', error: e.message }; } };
+        return { type: e.userCancelled ? 'cancelled' : 'failed', error: e.message, toJSON() { return { type: this.type, error: this.error }; } };
       }
     },
-    async purchaseFromGooglePlay(productId, basePlanId, offerId) {
+    async purchaseFromGooglePlay(productId, basePlanId) {
       try {
         const { customerInfo } = await Purchases.purchaseProduct(productId, null, basePlanId);
         if (customerInfo.entitlements.active.length > 0) {
@@ -43,22 +37,15 @@ function createPurchaseController() {
         }
         return { type: 'cancelled', toJSON() { return { type: 'cancelled' }; } };
       } catch (e) {
-        if (e.userCancelled) {
-          return { type: 'cancelled', toJSON() { return { type: 'cancelled' }; } };
-        }
-        return { type: 'failed', error: e.message, toJSON() { return { type: 'failed', error: e.message }; } };
+        return { type: e.userCancelled ? 'cancelled' : 'failed', error: e.message, toJSON() { return { type: this.type, error: this.error }; } };
       }
     },
     async restorePurchases() {
       try {
         const { customerInfo } = await Purchases.restorePurchases();
-        return {
-          toJson() { return { result: 'restored' }; },
-        };
+        return { toJson() { return { result: 'restored' }; } };
       } catch (e) {
-        return {
-          toJson() { return { result: 'failed', errorMessage: e.message }; },
-        };
+        return { toJson() { return { result: 'failed', errorMessage: e.message }; } };
       }
     },
   };
@@ -68,13 +55,12 @@ export async function initSuperwall() {
   if (initialized) return;
   try {
     await initRevenueCat();
-    console.log('[Superwall] Starting configure with key:', SUPERWALL_API_KEY ? SUPERWALL_API_KEY.substring(0, 8) + '...' : 'MISSING');
-    const result = await Superwall.configure({
+    await Superwall.configure({
       apiKey: SUPERWALL_API_KEY,
       purchaseController: createPurchaseController(),
     });
-    console.log('[Superwall] Configure result:', result);
     initialized = true;
+
     Purchases.addCustomerInfoUpdateListener(async (customerInfo) => {
       const hasExtraTokens = customerInfo.entitlements.active['extra_grace_tokens']?.isActive === true;
       Superwall.shared?.setSubscriptionStatus?.(
@@ -82,40 +68,37 @@ export async function initSuperwall() {
           ? { type: 'active', toJSON() { return { type: 'active' }; } }
           : { type: 'inactive', toJSON() { return { type: 'inactive' }; } }
       );
-      if (hasExtraTokens) {
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('grace_tokens')
-              .eq('id', user.id)
-              .single();
-            const current = profile?.grace_tokens ?? 3;
-            await supabase
-              .from('profiles')
-              .update({ grace_tokens: current + 3 })
-              .eq('id', user.id);
-          }
-        } catch (e) {
-          console.warn('[Superwall] Supabase token grant failed:', e.message);
-        }
-      }
     });
-    console.log('[Superwall] Configured with RevenueCat purchase controller');
   } catch (e) {
     console.warn('[Superwall] Init failed:', e.message);
-    console.warn('[Superwall] Stack:', e.stack);
   }
 }
 
 export async function canPurchaseTokens() {
   try {
     const { customerInfo } = await Purchases.getCustomerInfo();
-    const entitled = customerInfo.entitlements.active['extra_grace_tokens']?.isActive === true;
-    return !entitled;
+    return !customerInfo.entitlements.active['extra_grace_tokens']?.isActive;
   } catch {
     return true;
+  }
+}
+
+export async function grantEntitlementTokens() {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('grace_tokens')
+      .eq('id', user.id)
+      .single();
+    const current = profile?.grace_tokens ?? 3;
+    await supabase
+      .from('profiles')
+      .update({ grace_tokens: current + 3 })
+      .eq('id', user.id);
+  } catch (e) {
+    console.warn('[Superwall] Token grant failed:', e.message);
   }
 }
 
@@ -134,5 +117,16 @@ export async function triggerGraceTokenPaywall(onPurchase) {
     });
   } catch (e) {
     console.warn('[Superwall] Paywall trigger failed:', e.message);
+  }
+}
+
+export async function triggerFocusReportUpsell() {
+  try {
+    await Superwall.register({
+      placement: 'focus_report',
+      feature: () => {},
+    });
+  } catch (e) {
+    console.warn('[Superwall] Focus report upsell failed:', e.message);
   }
 }

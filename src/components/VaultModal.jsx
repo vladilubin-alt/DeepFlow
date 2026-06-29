@@ -32,7 +32,7 @@ export default function VaultModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-obsidian/80 backdrop-blur-md p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-obsidian/80 backdrop-blur-md p-4" role="dialog" aria-modal="true" aria-label="Writing vault">
       <div className="glass-panel rounded-[2.5rem] w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between p-6 pb-4 border-b border-slate-gray/40">
           <h2 className="text-lg text-ivory font-serif">Recovery Vault</h2>

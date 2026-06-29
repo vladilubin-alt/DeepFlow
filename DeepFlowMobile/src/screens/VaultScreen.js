@@ -137,6 +137,9 @@ export default function VaultScreen() {
               key={item.id}
               onPress={() => handleRecover(item)}
               disabled={recovering === item.id || cost.label === 'expired'}
+              accessibilityLabel={`Recover draft: ${(item.content || '').slice(0, 50) || 'Untitled'}, ${item.word_count} words, ${cost.label}`}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: recovering === item.id || cost.label === 'expired' }}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',

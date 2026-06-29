@@ -55,6 +55,7 @@ export default function Header({ syncStatus, onOpenVault }) {
           <button
             onClick={() => navigate('/history')}
             className="magnetic-btn px-2 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-mono-custom bg-deep-slate border border-slate-gray/60 text-stone-400 hover:text-champagne hover:border-champagne/40 transition"
+            aria-label="View session history"
           >
             <span className="hidden sm:inline">History </span>◆
           </button>
@@ -63,12 +64,13 @@ export default function Header({ syncStatus, onOpenVault }) {
         <button
           onClick={onOpenVault}
           className="magnetic-btn px-2 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-mono-custom bg-deep-slate border border-slate-gray/60 text-stone-400 hover:text-champagne hover:border-champagne/40 transition"
+          aria-label="Open writing vault"
         >
           <span className="hidden sm:inline">Vault </span>◆
         </button>
 
-        <div className="magnetic-btn flex items-center gap-1 sm:gap-3 glass-panel px-2 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-mono-custom cursor-default">
-          <div className={`w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full ${syncDotColor(syncStatus)}`}></div>
+        <div className="magnetic-btn flex items-center gap-1 sm:gap-3 glass-panel px-2 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-mono-custom cursor-default" aria-label={`Sync status: ${syncLabel(syncStatus)}`}>
+          <div className={`w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full ${syncDotColor(syncStatus)}`} aria-hidden="true"></div>
           <span className="hidden sm:inline text-stone-300">Supabase: {syncLabel(syncStatus)}</span>
           <span className="hidden sm:inline text-stone-500">|</span>
           <span className="hidden sm:inline text-champagne">local</span>
@@ -77,7 +79,7 @@ export default function Header({ syncStatus, onOpenVault }) {
         <button
           onClick={handleSignOut}
           className="magnetic-btn px-2 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-mono-custom bg-deep-slate border border-slate-gray/60 text-stone-400 hover:text-red-400 hover:border-red-400/40 transition"
-          title="Sign Out"
+          aria-label="Sign out"
         >
           <span className="hidden sm:inline">Sign Out</span>
           <span className="sm:hidden">𝕏</span>

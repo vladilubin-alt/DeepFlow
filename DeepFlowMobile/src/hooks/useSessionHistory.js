@@ -59,7 +59,7 @@ export function useSessionHistory() {
           setLoading(false);
           return;
         }
-        setError(err.message);
+        setError('Could not load session history.');
         setSessions([]);
       } else {
         setSessions(data || []);
@@ -68,7 +68,7 @@ export function useSessionHistory() {
         }
       }
     } catch (e) {
-      setError(e.message);
+      setError('Could not load session history.');
     } finally {
       setLoading(false);
     }

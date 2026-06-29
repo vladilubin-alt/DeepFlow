@@ -1,26 +1,29 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../theme/ThemeContext';
+import { useHaptic } from '../theme/HapticContext';
 import { supabase } from '../lib/supabase';
 import { getReminderSettings, setReminderEnabled, setReminderTime } from '../services/NotificationService';
+import { exportUserData, deleteAccount } from '../services/GdprService';
 
 const HAPTIC_KEY = '@deepflow/settings/haptic';
 const SOUND_KEY = '@deepflow/settings/sound';
 
 export default function SettingsScreen() {
   const { colours, mode, toggle } = useTheme();
+  const { enabled: hapticOn, toggleHaptic } = useHaptic();
   const [user, setUser] = useState(null);
-  const [hapticOn, setHapticOn] = useState(true);
   const [soundOn, setSoundOn] = useState(true);
   const [reminderOn, setReminderOn] = useState(false);
   const [reminderHour, setReminderHour] = useState(9);
   const [reminderMinute, setReminderMinute] = useState(0);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem(HAPTIC_KEY).then(v => { if (v !== null) setHapticOn(v === 'true'); });
     AsyncStorage.getItem(SOUND_KEY).then(v => { if (v !== null) setSoundOn(v === 'true'); });
     getReminderSettings().then(s => {
       setReminderOn(s.enabled);
@@ -46,12 +49,6 @@ export default function SettingsScreen() {
     // S-07: scope:'global' revokes the server-side refresh token
     await supabase.auth.signOut({ scope: 'global' });
   }, []);
-
-  const toggleHaptic = useCallback(async () => {
-    const next = !hapticOn;
-    setHapticOn(next);
-    await AsyncStorage.setItem(HAPTIC_KEY, String(next));
-  }, [hapticOn]);
 
   const toggleSound = useCallback(async () => {
     const next = !soundOn;
@@ -79,6 +76,40 @@ export default function SettingsScreen() {
     await setReminderTime(newH, newM);
   }, [reminderHour, reminderMinute]);
 
+  const handleExportData = useCallback(async () => {
+    setExporting(true);
+    try {
+      await exportUserData();
+    } catch (e) {
+      Alert.alert('Export Failed', e.message || 'Could not export data.');
+    } finally {
+      setExporting(false);
+    }
+  }, []);
+
+  const handleDeleteAccount = useCallback(() => {
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete all your data including writing sessions, drafts, and graveyard entries. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Everything',
+          style: 'destructive',
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              await deleteAccount();
+            } catch (e) {
+              Alert.alert('Deletion Failed', e.message || 'Could not delete account.');
+              setDeleting(false);
+            }
+          },
+        },
+      ],
+    );
+  }, []);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colours.backgroundBase }}>
       <ScrollView style={{ flex: 1, paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 100 }}>
@@ -95,6 +126,8 @@ export default function SettingsScreen() {
               <Row label="User ID" value={user.id?.slice(0, 12) + '...'} colours={colours} />
               <TouchableOpacity
                 onPress={handleSignOut}
+                accessibilityLabel="Sign out of your account"
+                accessibilityRole="button"
                 style={{
                   flexDirection: 'row',
                   justifyContent: 'center',
@@ -112,6 +145,71 @@ export default function SettingsScreen() {
           ) : (
             <Row label="Auth" value="Not signed in" colours={colours} />
           )}
+        </Section>
+
+        <Section title="Privacy" colours={colours}>
+          <TouchableOpacity
+            onPress={() => Linking.openURL(PRIVACY_URL)}
+            accessibilityLabel="Open Privacy Policy"
+            accessibilityRole="link"
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              borderBottomWidth: 0.5,
+              borderBottomColor: colours.borderSubtle,
+            }}
+          >
+            <Text style={{ fontSize: 12, color: colours.textPrimary }}>Privacy Policy</Text>
+            <Text style={{ fontSize: 10, color: colours.accentAmberDark }}>View</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleExportData}
+            disabled={exporting}
+            accessibilityLabel="Export your data"
+            accessibilityRole="button"
+            accessibilityState={{ disabled: exporting }}
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              borderBottomWidth: 0.5,
+              borderBottomColor: colours.borderSubtle,
+            }}
+          >
+            <Text style={{ fontSize: 12, color: colours.textPrimary }}>Export my data</Text>
+            {exporting ? (
+              <ActivityIndicator size="small" color={colours.accentGold} />
+            ) : (
+              <Text style={{ fontSize: 10, color: colours.accentAmberDark }}>Export</Text>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleDeleteAccount}
+            disabled={deleting}
+            accessibilityLabel="Delete your account permanently"
+            accessibilityRole="button"
+            accessibilityHint="Opens a confirmation dialog"
+            accessibilityState={{ disabled: deleting }}
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+            }}
+          >
+            <Text style={{ fontSize: 12, color: colours.stateDanger }}>Delete account</Text>
+            {deleting ? (
+              <ActivityIndicator size="small" color={colours.stateDanger} />
+            ) : (
+              <Text style={{ fontSize: 10, color: colours.stateDanger }}>Delete</Text>
+            )}
+          </TouchableOpacity>
         </Section>
 
         <Section title="App" colours={colours}>
@@ -135,20 +233,20 @@ export default function SettingsScreen() {
           />
           {reminderOn && (
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colours.borderSubtle }}>
-              <TouchableOpacity onPress={() => adjustReminderTime(-1, 0)} style={{ paddingHorizontal: 16, paddingVertical: 6 }}>
+              <TouchableOpacity onPress={() => adjustReminderTime(-1, 0)} accessibilityLabel="Decrease reminder hour" accessibilityRole="button" style={{ paddingHorizontal: 16, paddingVertical: 6 }}>
                 <Text style={{ fontSize: 16, color: colours.accentGold }}>◀</Text>
               </TouchableOpacity>
               <Text style={{ fontSize: 20, color: colours.textPrimary, fontWeight: '500', marginHorizontal: 12, minWidth: 80, textAlign: 'center' }}>
                 {formatTime(reminderHour, reminderMinute)}
               </Text>
-              <TouchableOpacity onPress={() => adjustReminderTime(1, 0)} style={{ paddingHorizontal: 16, paddingVertical: 6 }}>
+              <TouchableOpacity onPress={() => adjustReminderTime(1, 0)} accessibilityLabel="Increase reminder hour" accessibilityRole="button" style={{ paddingHorizontal: 16, paddingVertical: 6 }}>
                 <Text style={{ fontSize: 16, color: colours.accentGold }}>▶</Text>
               </TouchableOpacity>
               <View style={{ width: 12 }} />
-              <TouchableOpacity onPress={() => adjustReminderTime(0, -15)} style={{ paddingHorizontal: 12, paddingVertical: 6 }}>
+              <TouchableOpacity onPress={() => adjustReminderTime(0, -15)} accessibilityLabel="Decrease reminder by 15 minutes" accessibilityRole="button" style={{ paddingHorizontal: 12, paddingVertical: 6 }}>
                 <Text style={{ fontSize: 14, color: colours.textMuted }}>-15m</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => adjustReminderTime(0, 15)} style={{ paddingHorizontal: 12, paddingVertical: 6 }}>
+              <TouchableOpacity onPress={() => adjustReminderTime(0, 15)} accessibilityLabel="Increase reminder by 15 minutes" accessibilityRole="button" style={{ paddingHorizontal: 12, paddingVertical: 6 }}>
                 <Text style={{ fontSize: 14, color: colours.textMuted }}>+15m</Text>
               </TouchableOpacity>
             </View>
@@ -194,6 +292,9 @@ function Row({ label, value, colours, onPress }) {
     <TouchableOpacity
       onPress={onPress}
       disabled={!onPress}
+      accessibilityLabel={`${label}: ${value}`}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: !onPress }}
       style={{
         flexDirection: 'row',
         justifyContent: 'space-between',

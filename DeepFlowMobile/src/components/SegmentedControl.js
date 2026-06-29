@@ -11,6 +11,9 @@ export default function SegmentedControl({ options, selectedIndex, onSelect }) {
           <TouchableOpacity
             key={i}
             onPress={() => onSelect(i)}
+            accessibilityLabel={opt}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: active }}
             style={{
               flex: 1,
               paddingVertical: 10,

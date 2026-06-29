@@ -48,6 +48,7 @@ export default function HistoryView() {
         <button
           onClick={() => navigate('/')}
           className="magnetic-btn px-4 py-2 rounded-full text-xs font-mono-custom bg-deep-slate border border-slate-gray/60 text-stone-400 hover:text-champagne hover:border-champagne/40 transition"
+          aria-label="Back to writing timer"
         >
           Back to Timer
         </button>

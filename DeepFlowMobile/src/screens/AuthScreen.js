@@ -1,17 +1,46 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { supabase } from '../lib/supabase';
+import { GOOGLE_WEB_CLIENT_ID } from '../config/env';
+
+GoogleSignin.configure({
+  webClientId: GOOGLE_WEB_CLIENT_ID,
+  offlineAccess: true,
+});
+
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 30000;
+
+function sanitizeAuthError(error) {
+  const msg = (error?.message || '').toLowerCase();
+  if (msg.includes('invalid login credentials') || msg.includes('invalid email or password')) {
+    return 'Invalid email or password.';
+  }
+  if (msg.includes('user already registered')) return 'An account with this email already exists.';
+  if (msg.includes('email not confirmed')) return 'Please check your email to confirm your account.';
+  if (msg.includes('rate limit') || msg.includes('too many')) return 'Too many attempts. Please try again later.';
+  if (msg.includes('password should be at least')) return 'Password must be at least 6 characters.';
+  return 'Something went wrong. Please try again.';
+}
 
 export default function AuthScreen({ colours }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const attemptsRef = useRef(0);
+  const lockoutUntilRef = useRef(0);
 
   const handleEmailAuth = useCallback(async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please enter email and password');
+      return;
+    }
+    if (Date.now() < lockoutUntilRef.current) {
+      const secs = Math.ceil((lockoutUntilRef.current - Date.now()) / 1000);
+      Alert.alert('Too many attempts', `Please wait ${secs} seconds before trying again.`);
       return;
     }
     setLoading(true);
@@ -19,9 +48,18 @@ export default function AuthScreen({ colours }) {
       const { error } = isSignUp
         ? await supabase.auth.signUp({ email, password, options: { emailRedirectTo: 'https://gleeful-liger-6f788b.netlify.app/auth/confirm' } })
         : await supabase.auth.signInWithPassword({ email, password });
-      if (error) Alert.alert('Auth Error', error.message);
+      if (error) {
+        attemptsRef.current++;
+        if (attemptsRef.current >= MAX_ATTEMPTS) {
+          lockoutUntilRef.current = Date.now() + LOCKOUT_MS;
+          attemptsRef.current = 0;
+        }
+        Alert.alert('Auth Error', sanitizeAuthError(error));
+      } else {
+        attemptsRef.current = 0;
+      }
     } catch (e) {
-      Alert.alert('Auth Error', e.message);
+      Alert.alert('Auth Error', 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -30,13 +68,31 @@ export default function AuthScreen({ colours }) {
   const handleGoogleSignIn = useCallback(async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      const idToken = userInfo.idToken;
+      if (!idToken) {
+        Alert.alert('Google Sign-In Error', 'No ID token received.');
+        setLoading(false);
+        return;
+      }
+      const { error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
-        options: { redirectTo: 'deepflow://auth/callback' },
+        token: idToken,
       });
-      if (error) Alert.alert('Google Sign-In Error', error.message);
+      if (error) {
+        Alert.alert('Google Sign-In Error', 'Authentication failed. Please try again.');
+      }
     } catch (e) {
-      Alert.alert('Google Sign-In Error', e.message);
+      if (e.code === statusCodes.SIGN_IN_CANCELLED) {
+        // User cancelled - do nothing
+      } else if (e.code === statusCodes.IN_PROGRESS) {
+        Alert.alert('Google Sign-In', 'Sign-in already in progress.');
+      } else if (e.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert('Google Sign-In', 'Google Play Services not available. Please update.');
+      } else {
+        Alert.alert('Google Sign-In Error', 'Something went wrong. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -67,6 +123,8 @@ export default function AuthScreen({ colours }) {
           onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
+          accessibilityLabel="Email address"
+          accessibilityHint="Enter your email to sign in or create an account"
         />
 
         <TextInput
@@ -83,11 +141,15 @@ export default function AuthScreen({ colours }) {
           value={password}
           onChangeText={setPassword}
           secureTextEntry
+          accessibilityLabel="Password"
+          accessibilityHint="Enter your password"
         />
 
         <TouchableOpacity
           onPress={handleEmailAuth}
           disabled={loading}
+          accessibilityLabel={isSignUp ? 'Sign Up' : 'Sign In'}
+          accessibilityRole="button"
           style={{
             backgroundColor: colours.accentGold,
             borderRadius: 8,
@@ -109,6 +171,8 @@ export default function AuthScreen({ colours }) {
         <TouchableOpacity
           onPress={handleGoogleSignIn}
           disabled={loading}
+          accessibilityLabel="Continue with Google"
+          accessibilityRole="button"
           style={{
             backgroundColor: colours.backgroundSurface,
             borderRadius: 8,
@@ -126,6 +190,8 @@ export default function AuthScreen({ colours }) {
 
         <TouchableOpacity
           onPress={() => setIsSignUp(!isSignUp)}
+          accessibilityLabel={isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+          accessibilityRole="button"
           style={{ marginTop: 16, alignItems: 'center' }}
         >
           <Text style={{ fontSize: 12, color: colours.textMuted }}>

@@ -1,16 +1,18 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { StatusBar, View, Text } from 'react-native';
+import { StatusBar, View, Text, Linking } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
+import { HapticProvider, useHaptic } from './src/theme/HapticContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { trigger, HapticFeedbackTypes } from 'react-native-haptic-feedback';
 import { supabase } from './src/lib/supabase';
 import { track, identify } from './src/services/AnalyticsService';
-import { isOnboardingComplete, presentFlareQuiz } from './src/services/FlareQuizService';
+import { isOnboardingComplete } from './src/services/FlareQuizService';
+import OnboardingScreen from './src/screens/OnboardingScreen';
 import { processQueue } from './src/services/SyncQueue';
 import { initSuperwall } from './src/services/SuperwallService';
 
@@ -20,32 +22,37 @@ import HistoryScreen from './src/screens/HistoryScreen';
 import VaultScreen from './src/screens/VaultScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import AuthScreen from './src/screens/AuthScreen';
+import Splash from './src/components/Splash';
 
 const Tab = createBottomTabNavigator();
 const HomeStack = createNativeStackNavigator();
-
-function HomeStackScreen() {
-  return (
-    <HomeStack.Navigator screenOptions={{ headerShown: false }}>
-      <HomeStack.Screen name="Home" component={HomeScreen} />
-      <HomeStack.Screen name="ActiveSession" component={ActiveSessionScreen} />
-    </HomeStack.Navigator>
-  );
-}
 
 function AppContent() {
   const { colours, mode } = useTheme();
   const isDark = mode === 'dark';
   const insets = useSafeAreaInsets();
+
+  function HomeStackScreen() {
+    return (
+      <HomeStack.Navigator
+        screenOptions={{
+          headerShown: false,
+          animation: 'slide_from_right',
+          animationDuration: 320,
+          contentStyle: { backgroundColor: colours.backgroundBase },
+        }}
+      >
+        <HomeStack.Screen name="Home" component={HomeScreen} />
+        <HomeStack.Screen name="ActiveSession" component={ActiveSessionScreen} />
+      </HomeStack.Navigator>
+    );
+  }
+
   const [authReady, setAuthReady] = useState(false);
   const [session, setSession] = useState(null);
-  const [hapticEnabled, setHapticEnabled] = useState(true);
-
-  useEffect(() => {
-    AsyncStorage.getItem('@deepflow/settings/haptic').then(v => {
-      if (v !== null) setHapticEnabled(v === 'true');
-    });
-  }, []);
+  const [splashFinished, setSplashFinished] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const { enabled: hapticEnabled } = useHaptic();
 
   const tabHaptic = useCallback(() => {
     if (hapticEnabled) {
@@ -73,6 +80,23 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
+    const handleDeepLink = async ({ url }: { url: string }) => {
+      try {
+        const parsed = new URL(url);
+        if (parsed.protocol !== 'deepflow:') return;
+        if (parsed.host !== 'auth' || parsed.pathname !== '/callback') return;
+        const { data } = await supabase.auth.getSession();
+        if (data?.session) setSession(data.session);
+      } catch {}
+    };
+    const sub = Linking.addEventListener('url', handleDeepLink);
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink({ url });
+    });
+    return () => sub?.remove();
+  }, []);
+
+  useEffect(() => {
     if (!authReady) return;
     processQueue();
     initSuperwall();
@@ -92,7 +116,7 @@ function AppContent() {
 
   useEffect(() => {
     isOnboardingComplete().then((done) => {
-      if (!done) presentFlareQuiz();
+      if (!done) setShowOnboarding(true);
     });
   }, []);
 
@@ -122,88 +146,100 @@ function AppContent() {
         },
       };
 
-  if (!authReady) {
-    return (
-      <>
-        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-        <View style={{ flex: 1, backgroundColor: colours.backgroundBase, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: colours.textMuted, fontSize: 13 }}>Connecting...</Text>
-        </View>
-      </>
-    );
-  }
-
-  if (!session) {
-    return <AuthScreen colours={colours} />;
-  }
+  const handleOnboardingComplete = useCallback((flare) => {
+    setShowOnboarding(false);
+  }, []);
 
   return (
-    <>
+    <View style={{ flex: 1, backgroundColor: colours.backgroundBase }}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-      <NavigationContainer theme={navTheme}>
-        <Tab.Navigator
-          screenOptions={{
-            headerShown: false,
-            tabBarStyle: {
-              backgroundColor: colours.backgroundSurface,
-              borderTopColor: colours.borderSubtle,
-              borderTopWidth: 0.5,
-              height: 60 + insets.bottom,
-              paddingBottom: 8 + insets.bottom,
-              paddingTop: 4,
-            },
-            tabBarActiveTintColor: colours.accentGold,
-            tabBarInactiveTintColor: colours.textMuted,
-            tabBarLabelStyle: { fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase' },
-          }}
-        >
-          <Tab.Screen
-            name="HomeTab"
-            component={HomeStackScreen}
-            listeners={{ tabPress: () => tabHaptic() }}
-            options={{
-              tabBarLabel: 'Home',
-              tabBarIcon: ({ color, size }) => (
-                <Icon name="home-outline" size={size} color={color} />
-              ),
-            }}
-          />
-          <Tab.Screen
-            name="History"
-            component={HistoryScreen}
-            listeners={{ tabPress: () => tabHaptic() }}
-            options={{
-              tabBarLabel: 'History',
-              tabBarIcon: ({ color, size }) => (
-                <Icon name="time-outline" size={size} color={color} />
-              ),
-            }}
-          />
-          <Tab.Screen
-            name="Vault"
-            component={VaultScreen}
-            listeners={{ tabPress: () => tabHaptic() }}
-            options={{
-              tabBarLabel: 'Vault',
-              tabBarIcon: ({ color, size }) => (
-                <Icon name="lock-closed-outline" size={size} color={color} />
-              ),
-            }}
-          />
-          <Tab.Screen
-            name="Settings"
-            component={SettingsScreen}
-            listeners={{ tabPress: () => tabHaptic() }}
-            options={{
-              tabBarLabel: 'Settings',
-              tabBarIcon: ({ color, size }) => (
-                <Icon name="settings-outline" size={size} color={color} />
-              ),
-            }}
-          />
-        </Tab.Navigator>
-      </NavigationContainer>
-    </>
+      {showOnboarding && <OnboardingScreen onComplete={handleOnboardingComplete} />}
+      
+      {authReady ? (
+        !session ? (
+          <AuthScreen colours={colours} />
+        ) : (
+          <NavigationContainer theme={navTheme}>
+            <Tab.Navigator
+              screenOptions={{
+                headerShown: false,
+                animation: 'fade',
+                tabBarHideOnKeyboard: true,
+                lazy: true,
+                tabBarStyle: {
+                  backgroundColor: colours.backgroundSurface,
+                  borderTopColor: colours.borderSubtle,
+                  borderTopWidth: 0.5,
+                  height: 60 + insets.bottom,
+                  paddingBottom: 8 + insets.bottom,
+                  paddingTop: 4,
+                },
+                tabBarActiveTintColor: colours.accentGold,
+                tabBarInactiveTintColor: colours.textMuted,
+                tabBarLabelStyle: { fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase' },
+              }}
+            >
+              <Tab.Screen
+                name="HomeTab"
+                component={HomeStackScreen}
+                listeners={{ tabPress: () => tabHaptic() }}
+                options={{
+                  unmountOnBlur: false,
+                  tabBarLabel: 'Home',
+                  tabBarIcon: ({ color, size }) => (
+                    <Icon name="home-outline" size={size} color={color} />
+                  ),
+                }}
+              />
+              <Tab.Screen
+                name="History"
+                component={HistoryScreen}
+                listeners={{ tabPress: () => tabHaptic() }}
+                options={{
+                  unmountOnBlur: false,
+                  tabBarLabel: 'History',
+                  tabBarIcon: ({ color, size }) => (
+                    <Icon name="time-outline" size={size} color={color} />
+                  ),
+                }}
+              />
+              <Tab.Screen
+                name="Vault"
+                component={VaultScreen}
+                listeners={{ tabPress: () => tabHaptic() }}
+                options={{
+                  unmountOnBlur: false,
+                  tabBarLabel: 'Vault',
+                  tabBarIcon: ({ color, size }) => (
+                    <Icon name="lock-closed-outline" size={size} color={color} />
+                  ),
+                }}
+              />
+              <Tab.Screen
+                name="Settings"
+                component={SettingsScreen}
+                listeners={{ tabPress: () => tabHaptic() }}
+                options={{
+                  unmountOnBlur: false,
+                  tabBarLabel: 'Settings',
+                  tabBarIcon: ({ color, size }) => (
+                    <Icon name="settings-outline" size={size} color={color} />
+                  ),
+                }}
+              />
+            </Tab.Navigator>
+          </NavigationContainer>
+        )
+      ) : null}
+
+      {!splashFinished && (
+        <Splash
+          colours={colours}
+          ready={authReady}
+          onFinish={() => setSplashFinished(true)}
+        />
+      )}
+    </View>
   );
 }
 
@@ -211,7 +247,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <AppContent />
+        <HapticProvider>
+          <AppContent />
+        </HapticProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

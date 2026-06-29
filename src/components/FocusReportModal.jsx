@@ -102,7 +102,7 @@ export default function FocusReportModal({
   const scoreLabel = getScoreLabel(focusScore);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-obsidian/80 backdrop-blur-md p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-obsidian/80 backdrop-blur-md p-4" role="dialog" aria-modal="true" aria-label="Focus report">
       {focusScore >= 80 && <Confetti />}
       <div className="glass-panel rounded-[2rem] w-full max-w-md p-6 md:p-8">
         <div className="text-center mb-6">

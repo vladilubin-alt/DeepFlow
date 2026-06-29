@@ -68,7 +68,7 @@ export default function FlareQuizModal({ onComplete }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(13, 13, 18, 0.95)' }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(13, 13, 18, 0.95)' }} role="dialog" aria-modal="true" aria-label="Choose your flare type">
       <div className="w-full max-w-lg" style={{ animation: 'fadeSlideUp 0.4s ease-out' }}>
         <div className="text-center mb-8">
           <div className="text-3xl mb-2" style={{ fontStyle: 'italic', color: '#EF9F27' }}>DeepFlow</div>

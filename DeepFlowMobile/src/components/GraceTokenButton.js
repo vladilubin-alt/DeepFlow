@@ -7,6 +7,9 @@ export default function GraceTokenButton({ count, onUse }) {
   return (
     <TouchableOpacity
       onPress={onUse}
+      accessibilityLabel={`Use a grace token. ${count} remaining`}
+      accessibilityRole="button"
+      accessibilityHint="Rescues your draft from the guillotine"
       style={{
         backgroundColor: '#1a0a0a',
         borderRadius: 8,

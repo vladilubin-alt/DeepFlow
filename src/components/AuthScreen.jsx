@@ -155,6 +155,7 @@ export default function AuthScreen({ onAuth }) {
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
                 autoFocus
+                aria-label="Email address"
                 style={{
                   width: '100%',
                   padding: '14px 16px',
@@ -167,8 +168,8 @@ export default function AuthScreen({ onAuth }) {
                   boxSizing: 'border-box',
                   transition: 'border-color 0.2s',
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#EF9F27'}
-                onBlur={(e) => e.target.style.borderColor = '#333'}
+                onFocus={(e) => { e.target.style.borderColor = '#EF9F27'; e.target.style.outline = '2px solid #EF9F2740'; }}
+                onBlur={(e) => { e.target.style.borderColor = '#333'; e.target.style.outline = 'none'; }}
               />
             </div>
 
@@ -184,6 +185,7 @@ export default function AuthScreen({ onAuth }) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                  aria-label="Password"
                   style={{
                     width: '100%',
                     padding: '14px 48px 14px 16px',
@@ -196,12 +198,13 @@ export default function AuthScreen({ onAuth }) {
                     boxSizing: 'border-box',
                     transition: 'border-color 0.2s',
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#EF9F27'}
-                  onBlur={(e) => e.target.style.borderColor = '#333'}
+                  onFocus={(e) => { e.target.style.borderColor = '#EF9F27'; e.target.style.outline = '2px solid #EF9F2740'; }}
+                  onBlur={(e) => { e.target.style.borderColor = '#333'; e.target.style.outline = 'none'; }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                   style={{
                     position: 'absolute',
                     right: 12,
@@ -240,6 +243,7 @@ export default function AuthScreen({ onAuth }) {
             <button
               type="submit"
               disabled={loading}
+              aria-label={isSignUp ? 'Create account' : 'Sign in'}
               style={{
                 width: '100%',
                 padding: '16px',
@@ -293,6 +297,7 @@ export default function AuthScreen({ onAuth }) {
           <button
             onClick={handleGoogle}
             disabled={loading}
+            aria-label="Continue with Google"
             style={{
               width: '100%',
               padding: '14px',

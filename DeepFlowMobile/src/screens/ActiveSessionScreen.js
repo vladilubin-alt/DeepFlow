@@ -13,6 +13,7 @@ import { startSession, saveSession, saveToGraveyard, syncGraceTokens } from '../
 import { supabase } from '../lib/supabase';
 import { useBinauralAudio } from '../services/BinauralAudio';
 import { trigger as hapticTrigger, HapticFeedbackTypes } from 'react-native-haptic-feedback';
+import { useHaptic } from '../theme/HapticContext';
 import TopBar from '../components/TopBar';
 import TimerDisplay from '../components/TimerDisplay';
 import OrbVisualiser from '../components/OrbVisualiser';
@@ -63,8 +64,8 @@ export default function ActiveSessionScreen({ route, navigation }) {
   const [syncStatus, setSyncStatus] = useState('connected');
   const [validationWarning, setValidationWarning] = useState(null);
   const [currentFrequency, setCurrentFrequency] = useState(sensoryMode || 'off');
-  const [hapticOn, setHapticOn] = useState(true);
   const [soundOn, setSoundOn] = useState(true);
+  const { enabled: hapticOn } = useHaptic();
 
   useEffect(() => {
     const loadGraceTokens = async () => {
@@ -87,7 +88,6 @@ export default function ActiveSessionScreen({ route, navigation }) {
   const validationFailCount = useRef(0);
   const validationWarningRef = useRef(null);
   const textRef = useRef(initialText || '');
-  const hapticRef = useRef(true);
   const soundRef = useRef(true);
   const binaural = useBinauralAudio();
 
@@ -112,7 +112,6 @@ export default function ActiveSessionScreen({ route, navigation }) {
   }, []);
 
   useEffect(() => {
-    AsyncStorage.getItem('@deepflow/settings/haptic').then(v => { if (v !== null) { const on = v === 'true'; setHapticOn(on); hapticRef.current = on; } });
     AsyncStorage.getItem('@deepflow/settings/sound').then(v => { if (v !== null) { const on = v === 'true'; setSoundOn(on); soundRef.current = on; } });
   }, []);
 
@@ -126,6 +125,9 @@ export default function ActiveSessionScreen({ route, navigation }) {
     if (!valid) {
       validationFailCount.current++;
       setValidationWarning(reason);
+      if (hapticOn) {
+        try { hapticTrigger(HapticFeedbackTypes.notificationError, hapticOpts); } catch (_) {}
+      }
       if (validationWarningRef.current) clearTimeout(validationWarningRef.current);
       validationWarningRef.current = setTimeout(() => setValidationWarning(null), 2000);
       if (validationFailCount.current >= 3 && aiMode !== 'silent') {
@@ -144,9 +146,6 @@ export default function ActiveSessionScreen({ route, navigation }) {
     setNudge(null);
     if (nudgeIdleRef.current) clearTimeout(nudgeIdleRef.current);
 
-    // Haptic feedback on keystroke
-    if (hapticRef.current) binaural.vibrate(10);
-
     // Save draft locally (debounced via timeout in useEffect)
   }, [binaural]);
 
@@ -162,7 +161,7 @@ export default function ActiveSessionScreen({ route, navigation }) {
     const ok = machineRef.current.send(EVENTS.USE_GRACE_TOKEN);
     if (ok) {
       track('Grace Token Used (manual)', { graceTokens: machineRef.current.ctx.graceTokens });
-      if (hapticRef.current) binaural.vibrate([0, 50, 50]);
+      if (hapticOn) binaural.vibrate([0, 50, 50]);
       syncGraceTokens(machineRef.current.ctx.graceTokens);
       return;
     }
@@ -211,14 +210,14 @@ export default function ActiveSessionScreen({ route, navigation }) {
       setState(entry.to);
       if (entry.to === STATES.WARNING) {
         binaural.updateState('warning');
-        if (hapticRef.current) sessionHaptic(4, 150);
+        if (hapticOn) sessionHaptic(4, 150);
       } else if (entry.to === STATES.GUILLOTINED) {
         binaural.updateState('guillotined');
-        if (hapticRef.current) sessionHaptic(4, 150);
+        if (hapticOn) sessionHaptic(4, 150);
         track('Session Guillotined', { durationMinutes, targetWords, wordsWritten: entry.ctx.wordsWritten });
       } else if (entry.to === STATES.COMPLETED) {
         binaural.updateState('completed');
-        if (hapticRef.current) sessionHaptic(4, 150);
+        if (hapticOn) sessionHaptic(4, 150);
         track('Session Completed', { durationMinutes, targetWords, wordsWritten: entry.ctx.wordsWritten });
       } else if (entry.to === STATES.SAVED_BY_GRACE) {
         binaural.updateState('writing');
@@ -267,6 +266,9 @@ export default function ActiveSessionScreen({ route, navigation }) {
 
     machine.send(EVENTS.START);
     startSession();
+    if (hapticOn) {
+      try { hapticTrigger(HapticFeedbackTypes.impactMedium, hapticOpts); } catch (_) {}
+    }
     track('Session Started', { durationMinutes, targetWords, sensoryMode, aiMode });
     timer.start();
 
@@ -289,16 +291,16 @@ export default function ActiveSessionScreen({ route, navigation }) {
   // Repeating haptic during warning state
   const warningHapticRef = useRef(null);
   useEffect(() => {
-    if (state === STATES.WARNING && hapticRef.current) {
+    if (state === STATES.WARNING && hapticOn) {
       sessionHaptic(4, 150);
       warningHapticRef.current = setInterval(() => {
-        if (hapticRef.current) sessionHaptic(4, 150);
+        if (hapticOn) sessionHaptic(4, 150);
       }, 3000);
     } else {
       if (warningHapticRef.current) { clearInterval(warningHapticRef.current); warningHapticRef.current = null; }
     }
     return () => { if (warningHapticRef.current) { clearInterval(warningHapticRef.current); warningHapticRef.current = null; } };
-  }, [state]);
+  }, [state, hapticOn]);
 
   // Nudge logic: trigger during idle warning, not during writing
   useEffect(() => {
@@ -365,6 +367,8 @@ export default function ActiveSessionScreen({ route, navigation }) {
           wordsWritten={machineRef.current?.ctx?.wordsWritten || 0}
           targetWords={targetWords}
           elapsedMs={timerData.elapsedMs}
+          state={state}
+          totalDurationMs={durationMinutes * 60 * 1000}
         />
 
         <OrbVisualiser state={state} velocity={1 - Math.min(timerData.idleSinceMs / 8000, 1)} />
@@ -375,6 +379,9 @@ export default function ActiveSessionScreen({ route, navigation }) {
               <TouchableOpacity
                 key={mode}
                 onPress={() => changeFrequency(mode)}
+                accessibilityLabel={`${mode === 'off' ? 'Disable' : 'Enable'} ${mode} binaural audio`}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: currentFrequency === mode }}
                 style={{
                   paddingHorizontal: 12,
                   paddingVertical: 6,
@@ -387,7 +394,7 @@ export default function ActiveSessionScreen({ route, navigation }) {
                 </Text>
               </TouchableOpacity>
             ))}
-            <TouchableOpacity onPress={toggleMute} style={{ paddingHorizontal: 8, paddingVertical: 6 }}>
+            <TouchableOpacity onPress={toggleMute} accessibilityLabel={soundOn ? 'Mute audio' : 'Unmute audio'} accessibilityRole="button" style={{ paddingHorizontal: 8, paddingVertical: 6 }}>
               <Text style={{ fontSize: 12 }}>{soundOn ? '🔊' : '🔇'}</Text>
             </TouchableOpacity>
           </View>
@@ -406,6 +413,9 @@ export default function ActiveSessionScreen({ route, navigation }) {
             <GraceTokenButton count={timerData.graceTokens} onUse={useGraceToken} />
             <TouchableOpacity
               onPress={giveUp}
+              accessibilityLabel="Give up and clear your draft"
+              accessibilityRole="button"
+              accessibilityHint="Permanently discards the current writing session"
               style={{
                 backgroundColor: 'transparent',
                 borderRadius: 8,

@@ -127,7 +127,7 @@ export default function WritingArena({
         </div>
       </div>
 
-      <div className={`w-full h-0.5 bg-slate-gray/80 ${state === 'idle' ? 'hidden sm:block' : ''}`} style={{ background: '#1e1a0e' }}>
+      <div className={`w-full h-0.5 bg-slate-gray/80 ${state === 'idle' ? 'hidden sm:block' : ''}`} style={{ background: '#1e1a0e' }} role="progressbar" aria-valuenow={progressPercent} aria-valuemin={0} aria-valuemax={100} aria-label="Word count progress">
         <div
           className="h-full transition-all duration-300"
           style={{
@@ -148,6 +148,8 @@ export default function WritingArena({
               ? "Press 'Start Session' below to begin…"
               : 'Begin typing to enter flow state. Stopping triggers the warning…'
           }
+          aria-label="Writing area"
+          aria-describedby="writing-instructions"
           value={text}
           onChange={(e) => {
             onChange(e.target.value);

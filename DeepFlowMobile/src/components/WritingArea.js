@@ -1,4 +1,5 @@
-import { View, Text, TextInput } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, TextInput, Animated } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 
 const REJECTION_LABELS = {
@@ -18,8 +19,24 @@ export default function WritingArea({ text, onTextChange, editable, fadingText, 
   const bgColour = isDanger ? colours.backgroundDanger : isRejected ? colours.stateDangerBg : colours.backgroundSurface;
   const borderColour = isRejected ? colours.stateDanger : 'transparent';
 
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (isRejected) {
+      Animated.sequence([
+        Animated.timing(shakeAnim, { toValue: -8, duration: 40, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: 8, duration: 40, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: -8, duration: 40, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: 8, duration: 40, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: -4, duration: 40, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: 4, duration: 40, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: 0, duration: 40, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [validationWarning]);
+
   return (
-    <View style={{
+    <Animated.View style={{
       backgroundColor: bgColour,
       borderRadius: 8,
       minHeight: '30%',
@@ -27,6 +44,7 @@ export default function WritingArea({ text, onTextChange, editable, fadingText, 
       marginVertical: 8,
       borderWidth: isRejected ? 1.5 : 0,
       borderColor: borderColour,
+      transform: [{ translateX: shakeAnim }],
     }}>
       {fadingText ? (
         <Text style={{ fontSize: 12, fontFamily: 'monospace', color: '#2a2510', position: 'absolute', top: 14, left: 14, right: 14 }}>
@@ -42,6 +60,8 @@ export default function WritingArea({ text, onTextChange, editable, fadingText, 
         textAlignVertical="top"
         placeholder="Start writing..."
         placeholderTextColor={colours.textDisabled}
+        accessibilityLabel="Writing area"
+        accessibilityHint="Type your writing here during the focus session"
       />
       {isRejected && (
         <View style={{
@@ -59,6 +79,6 @@ export default function WritingArea({ text, onTextChange, editable, fadingText, 
           </Text>
         </View>
       )}
-    </View>
+    </Animated.View>
   );
 }
