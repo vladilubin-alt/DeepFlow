@@ -4,63 +4,181 @@ import { useTheme } from '../theme/ThemeContext';
 
 export default function OrbVisualiser({ state, velocity = 0 }) {
   const { colours } = useTheme();
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
+  const morphCycle = useRef(new Animated.Value(0)).current;
+  const glowOpacity = useRef(new Animated.Value(0.3)).current;
+  const burstAnim = useRef(new Animated.Value(1)).current;
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  const prevVelRef = useRef(velocity);
+  const morphLoopRef = useRef(null);
+  const glowLoopRef = useRef(null);
+  const floatLoopRef = useRef(null);
 
   const isWarning = state === 'warning' || state === 'guillotined';
   const isWriting = state === 'writing' || state === 'saved_by_grace';
   const isCompleted = state === 'completed';
+  const isDanger = state === 'guillotined';
 
-  const ringColour = isWarning ? colours.stateDanger : isCompleted ? colours.stateSuccess : colours.accentGold;
-  const dotColour = ringColour;
-  const size = 40 + Math.round(velocity * 20);
+  const isActive = isWarning;
 
+  const cycleDuration = isWarning ? 3000 : 10000;
+
+  const coreColor = isDanger
+    ? colours.stateDanger
+    : isWarning
+      ? colours.stateDanger
+      : isWriting
+        ? colours.accentGold
+        : colours.textMuted;
+
+  const glowColor = isDanger
+    ? colours.stateDanger + '22'
+    : isWarning
+      ? colours.stateDanger + '1A'
+      : isWriting
+        ? colours.accentGold + '20'
+        : colours.textMuted + '0D';
+
+  // Smooth continuous morph cycle via animated interpolation
   useEffect(() => {
-    if (isWriting) {
-      Animated.loop(
+    if (morphLoopRef.current) morphLoopRef.current.stop();
+    if (isActive) {
+      morphCycle.setValue(0);
+      morphLoopRef.current = Animated.loop(
         Animated.sequence([
-          Animated.timing(pulseAnim, { toValue: 1.15, duration: 800, easing: Easing.inOut(Easing.sin), useNativeDriver: false }),
-          Animated.timing(pulseAnim, { toValue: 1, duration: 800, easing: Easing.inOut(Easing.sin), useNativeDriver: false }),
+          Animated.timing(morphCycle, {
+            toValue: 1,
+            duration: cycleDuration / 2,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: false,
+          }),
+          Animated.timing(morphCycle, {
+            toValue: 0,
+            duration: cycleDuration / 2,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: false,
+          }),
         ]),
-      ).start();
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(glowAnim, { toValue: 1, duration: 1200, useNativeDriver: false }),
-          Animated.timing(glowAnim, { toValue: 0.3, duration: 1200, useNativeDriver: false }),
-        ]),
-      ).start();
-    } else if (isWarning) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, { toValue: 1.3, duration: 400, useNativeDriver: false }),
-          Animated.timing(pulseAnim, { toValue: 1, duration: 400, useNativeDriver: false }),
-        ]),
-      ).start();
-      Animated.timing(glowAnim, { toValue: 1, duration: 300, useNativeDriver: false }).start();
-    } else if (isCompleted) {
-      Animated.timing(pulseAnim, { toValue: 1.5, duration: 500, easing: Easing.out(Easing.back(2)), useNativeDriver: false }).start();
-      Animated.timing(glowAnim, { toValue: 0, duration: 1000, useNativeDriver: false }).start();
+      );
+      morphLoopRef.current.start();
     } else {
-      pulseAnim.setValue(1);
-      glowAnim.setValue(0.3);
+      morphCycle.setValue(0.5);
     }
-  }, [state, isWriting, isWarning, isCompleted]);
+    return () => { if (morphLoopRef.current) morphLoopRef.current.stop(); };
+  }, [isActive, cycleDuration]);
+
+  // Corner radius interpolations for smooth blob morph
+  const tl = morphCycle.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [28, 20, 24, 32, 28],
+  });
+  const tr = morphCycle.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [20, 28, 16, 24, 20],
+  });
+  const br = morphCycle.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [16, 22, 32, 18, 16],
+  });
+  const bl = morphCycle.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [32, 18, 16, 22, 32],
+  });
+
+  // Gentle pulsing glow — still for writing (blob morphs but doesn't pulse), pulses during warning
+  useEffect(() => {
+    if (glowLoopRef.current) glowLoopRef.current.stop();
+    if (isWriting) {
+      glowOpacity.setValue(0.35);
+    } else if (isWarning) {
+      glowLoopRef.current = Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowOpacity, {
+            toValue: 0.8, duration: cycleDuration / 2,
+            easing: Easing.inOut(Easing.sin), useNativeDriver: true,
+          }),
+          Animated.timing(glowOpacity, {
+            toValue: 0.4, duration: cycleDuration / 2,
+            easing: Easing.inOut(Easing.sin), useNativeDriver: true,
+          }),
+        ]),
+      );
+      glowLoopRef.current.start();
+    } else if (isCompleted) {
+      Animated.timing(glowOpacity, {
+        toValue: 0, duration: 800, useNativeDriver: true,
+      }).start();
+    } else {
+      glowOpacity.setValue(0.2);
+    }
+    return () => { if (glowLoopRef.current) glowLoopRef.current.stop(); };
+  }, [isWriting, isWarning, isCompleted, cycleDuration]);
+
+  // Gentle floating for writing state — slow translateY bob
+  useEffect(() => {
+    if (floatLoopRef.current) floatLoopRef.current.stop();
+    if (isWriting) {
+      floatAnim.setValue(0);
+      floatLoopRef.current = Animated.loop(
+        Animated.sequence([
+          Animated.timing(floatAnim, {
+            toValue: 1, duration: 3000,
+            easing: Easing.inOut(Easing.sin), useNativeDriver: false,
+          }),
+          Animated.timing(floatAnim, {
+            toValue: 0, duration: 3000,
+            easing: Easing.inOut(Easing.sin), useNativeDriver: false,
+          }),
+        ]),
+      );
+      floatLoopRef.current.start();
+    } else {
+      floatAnim.setValue(0);
+    }
+    return () => { if (floatLoopRef.current) floatLoopRef.current.stop(); };
+  }, [isWriting]);
+
+  // Burst effect on velocity change
+  useEffect(() => {
+    if (velocity > 0 && velocity !== prevVelRef.current) {
+      prevVelRef.current = velocity;
+      burstAnim.setValue(1.15);
+      Animated.timing(burstAnim, {
+        toValue: 1, duration: 350, easing: Easing.out(Easing.ease), useNativeDriver: false,
+      }).start();
+    }
+  }, [velocity]);
+
+  const floatY = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-4, 4],
+  });
+
+  const size = 32;
 
   return (
-    <View style={{ alignItems: 'center', justifyContent: 'center', marginVertical: 12 }}>
+    <Animated.View style={{ alignItems: 'center', justifyContent: 'center', marginVertical: 6, height: 50, transform: [{ translateY: floatY }] }}>
       <Animated.View style={{
-        width: size, height: size, borderRadius: size / 2,
-        borderWidth: 2, borderColor: ringColour,
-        alignItems: 'center', justifyContent: 'center',
-        transform: [{ scale: pulseAnim }],
-        shadowColor: ringColour,
+        position: 'absolute',
+        width: 64, height: 64,
+        borderRadius: 32,
+        backgroundColor: glowColor,
+        opacity: glowOpacity,
+      }} />
+
+      <Animated.View style={{
+        width: size, height: size,
+        borderTopLeftRadius: tl,
+        borderTopRightRadius: tr,
+        borderBottomRightRadius: br,
+        borderBottomLeftRadius: bl,
+        backgroundColor: coreColor,
+        transform: [{ scale: burstAnim }],
+        shadowColor: coreColor,
         shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: glowAnim,
-        shadowRadius: 12,
-        elevation: isWarning ? 8 : 4,
-      }}>
-        <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: dotColour }} />
-      </Animated.View>
-    </View>
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+        elevation: 4,
+      }} />
+    </Animated.View>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -66,6 +66,7 @@ export default function ActiveSessionScreen({ route, navigation }) {
   const [currentFrequency, setCurrentFrequency] = useState(sensoryMode || 'off');
   const [soundOn, setSoundOn] = useState(true);
   const { enabled: hapticOn } = useHaptic();
+  const graceTokensRef = useRef(3);
 
   useEffect(() => {
     const loadGraceTokens = async () => {
@@ -75,6 +76,7 @@ export default function ActiveSessionScreen({ route, navigation }) {
         const { data } = await supabase
           .from('profiles').select('grace_tokens').eq('id', session.user.id).single();
         if (data?.grace_tokens != null) {
+          graceTokensRef.current = data.grace_tokens;
           setTimerData((prev) => ({ ...prev, graceTokens: data.grace_tokens }));
         }
       } catch (e) {}
@@ -192,7 +194,7 @@ export default function ActiveSessionScreen({ route, navigation }) {
 
   useEffect(() => {
     const machine = new GuillotineStateMachine({
-      graceTokens: 3,
+      graceTokens: graceTokensRef.current,
       targetWords,
       durationSeconds: durationMinutes * 60,
     });
@@ -335,9 +337,8 @@ export default function ActiveSessionScreen({ route, navigation }) {
 
   const changeFrequency = useCallback((mode) => {
     setCurrentFrequency(mode);
-    if (mode === 'off') {
+    if (soundRef.current) {
       binaural.stop();
-    } else {
       binaural.start(mode);
     }
   }, [binaural]);
@@ -346,8 +347,10 @@ export default function ActiveSessionScreen({ route, navigation }) {
     const next = !soundOn;
     setSoundOn(next);
     soundRef.current = next;
-    if (next && currentFrequency !== 'off') {
-      binaural.start(currentFrequency);
+    if (next) {
+      const freq = currentFrequency === 'off' ? 'alpha' : currentFrequency;
+      setCurrentFrequency(freq);
+      binaural.start(freq);
     } else {
       binaural.stop();
     }
@@ -355,6 +358,11 @@ export default function ActiveSessionScreen({ route, navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colours.backgroundBase }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
       <ScrollView style={{ flex: 1, paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 40 }}>
         <TopBar
           subtitle={state === STATES.GUILLOTINED ? 'DANGER' : state === STATES.WARNING ? 'WARNING' : state === STATES.WRITING ? 'WRITING' : 'IDLE'}
@@ -374,28 +382,51 @@ export default function ActiveSessionScreen({ route, navigation }) {
         <OrbVisualiser state={state} velocity={1 - Math.min(timerData.idleSinceMs / 8000, 1)} />
 
         {state !== STATES.GUILLOTINED && state !== STATES.COMPLETED && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginVertical: 4 }}>
-            {['off', 'alpha', 'beta'].map((mode) => (
-              <TouchableOpacity
-                key={mode}
-                onPress={() => changeFrequency(mode)}
-                accessibilityLabel={`${mode === 'off' ? 'Disable' : 'Enable'} ${mode} binaural audio`}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: currentFrequency === mode }}
-                style={{
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: 12,
-                  backgroundColor: currentFrequency === mode ? colours.accentGold : colours.backgroundSurface,
-                }}
-              >
-                <Text style={{ fontSize: 10, color: currentFrequency === mode ? colours.accentGoldText : colours.textMuted }}>
-                  {mode === 'off' ? '🔇' : mode === 'alpha' ? 'α' : 'β'}
-                </Text>
-              </TouchableOpacity>
-            ))}
-            <TouchableOpacity onPress={toggleMute} accessibilityLabel={soundOn ? 'Mute audio' : 'Unmute audio'} accessibilityRole="button" style={{ paddingHorizontal: 8, paddingVertical: 6 }}>
-              <Text style={{ fontSize: 12 }}>{soundOn ? '🔊' : '🔇'}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginVertical: 8 }}>
+            {['alpha', 'beta'].map((mode) => {
+              const selected = currentFrequency === mode && soundOn;
+              return (
+                <TouchableOpacity
+                  key={mode}
+                  onPress={() => changeFrequency(mode)}
+                  accessibilityLabel={`${mode} binaural audio`}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected }}
+                  style={{
+                    paddingHorizontal: 20,
+                    paddingVertical: 10,
+                    borderRadius: 14,
+                    backgroundColor: selected ? colours.accentGold : colours.backgroundSurface,
+                    borderWidth: 0.5,
+                    borderColor: selected ? colours.accentGold : colours.borderSubtle,
+                    minWidth: 64,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{
+                    fontSize: 14,
+                    fontWeight: selected ? '700' : '500',
+                    color: selected ? colours.accentGoldText : (soundOn ? colours.textPrimary : colours.textMuted),
+                  }}>
+                    {mode === 'alpha' ? 'α Alpha' : 'β Beta'}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+            <TouchableOpacity
+              onPress={toggleMute}
+              accessibilityLabel={soundOn ? 'Mute audio' : 'Unmute audio'}
+              accessibilityRole="button"
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                borderRadius: 14,
+                backgroundColor: colours.backgroundSurface,
+                borderWidth: 0.5,
+                borderColor: colours.borderSubtle,
+              }}
+            >
+              <Text style={{ fontSize: 16 }}>{soundOn ? '🔊' : '🔇'}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -439,6 +470,7 @@ export default function ActiveSessionScreen({ route, navigation }) {
           <AiNudge prompt={nudge} onDismiss={dismissNudge} />
         )}
       </ScrollView>
+      </KeyboardAvoidingView>
 
       <FocusReportModal
         visible={showFocusReport}

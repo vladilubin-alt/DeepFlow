@@ -8,7 +8,7 @@ export const light = {
 
   textPrimary: '#2C2C2A',
   textSecondary: '#444441',
-  textMuted: '#B4B2A9',
+  textMuted: '#6B6960',
   textDisabled: '#D3D1C7',
 
   accentGold: '#BA7517',
@@ -41,7 +41,7 @@ export const dark = {
 
   textPrimary: '#D3D1C7',
   textSecondary: '#8A877F',
-  textMuted: '#5F5E5A',
+  textMuted: '#80807A',
   textDisabled: '#2A2510',
 
   accentGold: '#EF9F27',

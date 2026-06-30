@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { trigger, HapticFeedbackTypes } from 'react-native-haptic-feedback';
@@ -165,12 +165,22 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         <View style={{ marginBottom: 14 }}>
-          <Text style={{ fontSize: 10, color: colours.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Sensory Layer</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+            <Text style={{ fontSize: 10, color: colours.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>Sensory Layer</Text>
+            <TouchableOpacity onPress={() => Alert.alert('Sensory Layer', 'Binaural beats that sync with your brainwaves. Alpha (6Hz) promotes relaxed focus. Beta (14Hz) drives intense concentration. Off disables audio.')} style={{ marginLeft: 6 }}>
+              <Text style={{ fontSize: 10, color: colours.accentGold }}>ℹ️</Text>
+            </TouchableOpacity>
+          </View>
           <SegmentedControl options={sensoryOpts} selectedIndex={sensoryIdx} onSelect={(i) => { hapticTap(); setSensoryIdx(i); }} />
         </View>
 
         <View style={{ marginBottom: 24 }}>
-          <Text style={{ fontSize: 10, color: colours.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>AI Mode</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+            <Text style={{ fontSize: 10, color: colours.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>AI Mode</Text>
+            <TouchableOpacity onPress={() => Alert.alert('AI Mode', 'Silent: no prompts. Coach: encouraging nudges when you idle. Demon: pressure-based prompts that push you to keep writing.')} style={{ marginLeft: 6 }}>
+              <Text style={{ fontSize: 10, color: colours.accentGold }}>ℹ️</Text>
+            </TouchableOpacity>
+          </View>
           <SegmentedControl options={aiModeOpts} selectedIndex={aiModeIdx} onSelect={(i) => { hapticTap(); setAiModeIdx(i); }} />
         </View>
 

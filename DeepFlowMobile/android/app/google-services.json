@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "958457718686",
+    "project_id": "deepflow-500918",
+    "storage_bucket": "deepflow-500918.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:958457718686:android:5ab3f909d82f34fb1f988f",
+        "android_client_info": {
+          "package_name": "com.deepflowmobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "958457718686-7a5eoc03aqoqei8ok1qi5qt4uvodut0v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.deepflowmobile",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "958457718686-m3vtv887auqs6rnvsejvi84ce3rafbot.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.deepflowmobile",
+            "certificate_hash": "EED2B619278894CB50D1DAF8E408F5AC7B6FFCFD"
+          }
+        },
+        {
+          "client_id": "958457718686-joggqbol22us0jqo9v0bcmvim90i7ml7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbi2wcglYr4XjpgvwVOXrxhj3ZBtdZqnA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "958457718686-joggqbol22us0jqo9v0bcmvim90i7ml7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

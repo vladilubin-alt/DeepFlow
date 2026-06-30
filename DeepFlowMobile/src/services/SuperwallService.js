@@ -3,10 +3,16 @@ import { NativeModules } from 'react-native';
 import Superwall from '@superwall/react-native-superwall';
 import { supabase } from '../lib/supabase';
 import { SUPERWALL_API_KEY, REVENUECAT_API_KEY } from '../config/env';
+import { canShowReviewPrompt, markReviewPrompted, incrementPurchaseCount } from '../lib/reviewManager';
 
 let initialized = false;
+let onFirstPurchaseCallback = null;
 
 const hasNativeModule = !!NativeModules.SuperwallReactNative;
+
+export function setOnFirstPurchase(callback) {
+  onFirstPurchaseCallback = callback;
+}
 
 async function initRevenueCat() {
   try {
@@ -68,6 +74,16 @@ export async function initSuperwall() {
           ? { type: 'active', toJSON() { return { type: 'active' }; } }
           : { type: 'inactive', toJSON() { return { type: 'inactive' }; } }
       );
+
+      const entitlements = customerInfo.entitlements.active;
+      const hasAnyEntitlement = Object.keys(entitlements).length > 0;
+      if (hasAnyEntitlement) {
+        await incrementPurchaseCount();
+        const shouldPrompt = await canShowReviewPrompt();
+        if (shouldPrompt && onFirstPurchaseCallback) {
+          onFirstPurchaseCallback();
+        }
+      }
     });
   } catch (e) {
     console.warn('[Superwall] Init failed:', e.message);

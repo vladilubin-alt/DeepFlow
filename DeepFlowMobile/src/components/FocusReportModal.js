@@ -192,7 +192,13 @@ export default function FocusReportModal({
     </View>
   );
 
+  const [showBreakdown, setShowBreakdown] = useState(false);
+
   const showUpsell = useCallback(async () => {
+    if (showBreakdown) {
+      setShowBreakdown(false);
+      return;
+    }
     try {
       await Superwall.register({
         placement: 'focus_report',
@@ -204,7 +210,7 @@ export default function FocusReportModal({
       console.warn('[FocusReport] Upsell trigger failed:', e.message);
     }
     track('Focus Report Upsell Shown');
-  }, []);
+  }, [showBreakdown]);
 
   const scoreColor = getScoreColor(focusScore, colours);
   const scoreLabel = getScoreLabel(focusScore);
@@ -246,10 +252,21 @@ export default function FocusReportModal({
             textTransform: 'uppercase',
             letterSpacing: 1,
             textAlign: 'center',
-            marginBottom: 20,
+            marginBottom: guillotined ? 4 : 20,
           }}>
             {guillotined ? 'Your session was guillotined' : 'Great flow — here\'s how you did'}
           </Text>
+          {guillotined && (
+            <Text style={{
+              fontSize: 10,
+              color: colours.stateDangerMuted,
+              textAlign: 'center',
+              marginBottom: 16,
+              fontFamily: 'monospace',
+            }}>
+              Life happened. 1 Grace Token consumed to save your streak.
+            </Text>
+          )}
 
           <View style={{
             backgroundColor: colours.backgroundBase,
@@ -318,9 +335,37 @@ export default function FocusReportModal({
             }}
           >
             <Text style={{ fontSize: 11, color: colours.accentGold, fontWeight: '500', letterSpacing: 0.5 }}>
-              See Full Breakdown → Unlock Premium Insights
+              {showBreakdown ? 'Hide Breakdown' : 'See Full Breakdown → Unlock Premium Insights'}
             </Text>
           </TouchableOpacity>
+
+          {showBreakdown && (
+            <View style={{ backgroundColor: colours.backgroundSurface, borderRadius: 10, padding: 14, marginBottom: 12 }}>
+              <Text style={{ fontSize: 12, color: colours.textPrimary, fontWeight: '600', marginBottom: 10 }}>Session Analytics</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                <Text style={{ fontSize: 11, color: colours.textMuted }}>Best WPM</Text>
+                <Text style={{ fontSize: 11, color: colours.textPrimary, fontWeight: '500' }}>{stats.bestWpm}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                <Text style={{ fontSize: 11, color: colours.textMuted }}>Total Words</Text>
+                <Text style={{ fontSize: 11, color: colours.textPrimary, fontWeight: '500' }}>{stats.totalWords.toLocaleString()}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                <Text style={{ fontSize: 11, color: colours.textMuted }}>Total Sessions</Text>
+                <Text style={{ fontSize: 11, color: colours.textPrimary, fontWeight: '500' }}>{stats.totalSessions}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                <Text style={{ fontSize: 11, color: colours.textMuted }}>Current Streak</Text>
+                <Text style={{ fontSize: 11, color: colours.textPrimary, fontWeight: '500' }}>{stats.streak} days</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text style={{ fontSize: 11, color: colours.textMuted }}>Avg WPM</Text>
+                <Text style={{ fontSize: 11, color: colours.textPrimary, fontWeight: '500' }}>
+                  {stats.totalSessions > 0 ? Math.round(stats.totalWords / (stats.totalSessions * 5)) : 0}
+                </Text>
+              </View>
+            </View>
+          )}
 
           {guillotined && onUseGraceToken && (
             <TouchableOpacity

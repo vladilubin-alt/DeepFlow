@@ -59,7 +59,7 @@ export default function AuthScreen({ onAuth }) {
     try {
       await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin },
+        options: { redirectTo: window.location.origin + '/auth/confirm' },
       });
     } catch (err) {
       setMessage({ type: 'error', text: 'Google sign-in failed.' });

@@ -1,6 +1,9 @@
-export const SUPABASE_URL = 'https://rkpjropcdqprsnebjwqu.supabase.co';
-export const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcGpyb3BjZHFwcnNuZWJqd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NzU1MDEsImV4cCI6MjA5NzQ1MTUwMX0.--dPs3L57gN1Wpk75lE0410A72XYfzBC_HoQ5nh9WF8';
-export const MIXPANEL_TOKEN = 'e142d74275005fd131eb943fb359cba9';
-export const SUPERWALL_API_KEY = 'pk_juRmfKDHkdolpM3z8Y7Ci';
-export const REVENUECAT_API_KEY = 'test_EepYLflnvauqfrsVQKKHovKfKXd';
-export const GOOGLE_WEB_CLIENT_ID = '958457718686-7a5eoc03aqoqei8ok1qi5qt4uvodut0v.apps.googleusercontent.com';
+import Config from 'react-native-config';
+
+export const SUPABASE_URL = Config.SUPABASE_URL || '';
+export const SUPABASE_ANON_KEY = Config.SUPABASE_ANON_KEY || '';
+export const MIXPANEL_TOKEN = Config.MIXPANEL_TOKEN || '';
+export const SUPERWALL_API_KEY = Config.SUPERWALL_API_KEY || '';
+export const REVENUECAT_API_KEY = Config.REVENUECAT_API_KEY || '';
+export const GOOGLE_WEB_CLIENT_ID = Config.GOOGLE_WEB_CLIENT_ID || '';
+export const GOOGLE_ANDROID_CLIENT_ID = Config.GOOGLE_ANDROID_CLIENT_ID || '';

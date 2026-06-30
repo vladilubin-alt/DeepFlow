@@ -30,7 +30,7 @@ export async function completeOnboarding(flare) {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       await supabase.from('profiles').upsert(
-        { id: user.id, flare_type: flare },
+        { id: user.id, flare_type: flare, grace_tokens: 3 },
         { onConflict: 'id' },
       );
     }

@@ -1,7 +1,7 @@
-# Mobile Release Protocol — Build-to-APK Pipeline
+# Mobile Release Protocol — React Native (Hermes + ProGuard)
 
 **Classification:** Release Engineering  
-**Scope:** Packaging the DeepFlow Vite web app into Android APK / iOS IPA via Capacitor.
+**Scope:** Building and signing the React Native Android APK / AAB for Play Store distribution.
 
 ---
 
@@ -11,96 +11,133 @@
 | Tool | Required Version | Check Command |
 |------|-----------------|---------------|
 | Java JDK | 17 (or 21 LTS) | `java -version` |
-| Android SDK | API 34+ | `echo $ANDROID_HOME` |
+| Android SDK | API 35+ | `echo $ANDROID_HOME` |
 | Node.js | 20+ | `node --version` |
 | Gradle | 8.x (bundled) | `android/gradlew --version` |
 
-### iOS (macOS only)
-| Tool | Required |
-|------|----------|
-| Xcode | 15.x+ |
-| CocoaPods | `pod --version` |
+### Device / Emulator
+- Physical device via ADB: `adb devices`
+- Or Android Emulator (API 35+)
 
 ---
 
 ## 2. Build Pipeline (Android)
 
-### 2.1 Web Build
-```bash
-npm run build
-# Output: dist/
-```
+All commands run from `DeepFlowMobile/`.
 
-### 2.2 Sync Web Assets to Native
+### 2.1 Debug APK (fast iteration)
 ```bash
-npx cap sync android
+npx react-native run-android --active-arch-only
 ```
-This copies `dist/` into `android/app/src/main/assets/public/` and installs any Capacitor plugins.
+- Installs directly to connected device
+- Uses Metro dev server for hot-reload
+- Skips unused architectures for speed
 
-### 2.3 Open in Android Studio
+### 2.2 Full Debug APK (all architectures)
 ```bash
-npx cap open android
+npx react-native run-android
 ```
-Android Studio handles the Gradle sync and SDK resolution. From there:
-- **Build → Build Bundle(s) / APK(s)**
-- Select **APK** (or AAB for Play Store)
-- Output: `android/app/build/outputs/apk/debug/` or `release/`
+- Builds for all `reactNativeArchitectures` (arm64-v8a, armeabi-v7a, x86_64)
+- Required before release to confirm no architecture-specific issues
 
-### 2.4 Command-Line APK Build (CI/CD)
+### 2.3 Release AAB (Play Store)
+```bash
+cd android
+./gradlew bundleRelease
+```
+Output: `android/app/build/outputs/bundle/release/app-release.aab`
+
+### 2.4 Release APK (sideload / testing)
 ```bash
 cd android
 ./gradlew assembleRelease
 ```
-Requires `ANDROID_HOME` and a keystore configured in `android/app/build.gradle`.
+Output: `android/app/build/outputs/apk/release/app-release.apk`
 
----
-
-## 3. Build Pipeline (iOS)
-
+### 2.5 Environment Variables
+`.env` values are injected at build time via `react-native-config`'s `dotenv.gradle`. The file is read from `DeepFlowMobile/.env` at Gradle configure phase. After changing `.env`, run a clean build:
 ```bash
-npx cap add ios          # first time only
-npx cap sync ios
-npx cap open ios          # opens Xcode
+cd android && ./gradlew clean && cd ..
+npx react-native run-android --active-arch-only
 ```
 
-In Xcode:
-- Set signing team (Apple Developer account required)
-- Product → Archive
-- Distribute via TestFlight or App Store Connect
+---
+
+## 3. Hermes & ProGuard
+
+Both are enabled in `android/app/build.gradle`:
+
+- **Hermes** (JS-to-bytecode compiler): Enabled by default in RN 0.86+. Reduces JS bundle size and improves startup time.
+- **ProGuard** (Java bytecode shrinking): `enableProguardInReleaseBuilds = true` in `build.gradle`. Obfuscates and minifies Java/Kotlin code.
+
+To verify Hermes is working:
+```bash
+# After a release build, check for hermes bytecode
+file android/app/build/generated/assets/createBundleReleaseJsAndAssets/index.android.bundle
+# Should say "Hermes JavaScript bundle" not "JSON text"
+```
 
 ---
 
-## 4. Versioning
+## 4. Signing & Keystore
 
-Update version in three places:
-```json
-// package.json
-"version": "0.5.0"
+### 4.1 Debug Keystore (built-in)
+- Located at: `android/app/debug.keystore`
+- Password: `android`
+- Used automatically for debug builds
 
-// capacitor.config.json
-"appVersion": "0.5.0"
+### 4.2 Release Keystore (production)
+Create before first Play Store release:
+```bash
+keytool -genkey -v -keystore android/app/release.keystore \
+  -alias deepflow -keyalg RSA -keysize 2048 -validity 10000
+```
 
+Then update `android/app/build.gradle`:
+```gradle
+signingConfigs {
+    release {
+        storeFile file('release.keystore')
+        storePassword System.getenv("DF_STORE_PASSWORD") ?: "your-store-password"
+        keyAlias "deepflow"
+        keyPassword System.getenv("DF_KEY_PASSWORD") ?: "your-key-password"
+    }
+}
+```
+**Never commit passwords** — use `DF_STORE_PASSWORD` / `DF_KEY_PASSWORD` env vars in CI.
+
+---
+
+## 5. Versioning
+
+Update version in:
+```groovy
 // android/app/build.gradle
-versionCode = 1  // increment per build
-versionName = "0.5.0"
+defaultConfig {
+    versionCode 1  // increment per build
+    versionName "1.0.0"
+}
 ```
 
 Version scheme: `MAJOR.MINOR.PATCH` — bump PATCH for hotfixes, MINOR for features, MAJOR for breaking changes.
 
 ---
 
-## 5. Release Checklist
+## 6. Release Checklist
 
-- [ ] `npm run build` passes (0 errors)
-- [ ] `npx cap sync` copies all assets
-- [ ] APK builds without errors
-- [ ] App installs and launches on Android 12+ emulator
-- [ ] Supabase Site URL updated to include `capacitor://localhost` for OAuth redirects (if applicable)
-- [ ] `android/app/build.gradle` signing configured for release
+- [ ] `npx react-native run-android --active-arch-only` passes (debug)
+- [ ] `.env` contains production API keys for RevenueCat + Superwall
+- [ ] Hermes enabled: JS bundle compiled to Hermes bytecode
+- [ ] ProGuard enabled: `enableProguardInReleaseBuilds = true`
+- [ ] Release keystore created and passwords set in env vars
+- [ ] `./gradlew bundleRelease` succeeds (signed AAB)
+- [ ] AAB tested via `bundletool` or Play Store internal track
+- [ ] Supabase Auth Site URL updated to include app's redirect URI
+- [ ] Version bump committed before tagging
 
 ---
 
-## 6. ASO Metadata (Play Store)
+## 7. ASO Metadata (Play Store)
 
 Store in `stages/05_Trigger/`:
 - **Title** (30 chars): `DeepFlow — ADHD Writing Timer`
@@ -109,4 +146,4 @@ Store in `stages/05_Trigger/`:
 
 ---
 
-*Document version: 1.0 — Phase 5 Expansion*
+*Document version: 2.0 — RN v0.4.3 pivot*

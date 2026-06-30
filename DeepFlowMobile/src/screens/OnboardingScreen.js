@@ -14,7 +14,7 @@ const DESIRED_STATES = [
 
 const ANALYSIS_STEPS = [
   'Analyzing flare_type...',
-  'Securing Recovery Vault...',
+  'Initializing Flow Protection... 3 Grace Tokens secured.',
   'Activating Forgiving Guillotine...',
   'Calibrating focus engine...',
   'Ready.',
@@ -25,6 +25,7 @@ export default function OnboardingScreen({ onComplete }) {
   const [step, setStep] = useState(0);
   const [selectedFlare, setSelectedFlare] = useState(null);
   const [selectedDesired, setSelectedDesired] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState('yearly');
   const [analysisIdx, setAnalysisIdx] = useState(0);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -205,46 +206,64 @@ export default function OnboardingScreen({ onComplete }) {
       <Text style={[styles.sectionTitle, { color: colours.textPrimary, marginBottom: 8 }]}>
         Unlock Your Full Potential
       </Text>
-      <Text style={[styles.subText, { color: colours.textMuted, marginBottom: 24 }]}>
+      <Text style={[styles.subText, { color: colours.textMuted, marginBottom: 16 }]}>
         Start with 3 free Grace Tokens. Upgrade for unlimited focus.
       </Text>
 
-      {/* Trial Explainer */}
-      <View style={[styles.trialCard, { backgroundColor: colours.backgroundSurface }]}>
-        <Text style={[styles.trialTitle, { color: colours.accentGold }]}>How the trial works</Text>
-        <View style={styles.trialStep}>
-          <Text style={[styles.trialDay, { color: colours.accentGold }]}>Day 0</Text>
-          <Text style={[styles.trialDesc, { color: colours.textPrimary }]}>Unlock everything — $0</Text>
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 12 }}>
+        {/* Trial Explainer */}
+        <View style={[styles.trialCard, { backgroundColor: colours.backgroundSurface }]}>
+          <Text style={[styles.trialTitle, { color: colours.accentGold }]}>How the trial works</Text>
+          <View style={styles.trialStep}>
+            <Text style={[styles.trialDay, { color: colours.accentGold }]}>Day 0</Text>
+            <Text style={[styles.trialDesc, { color: colours.textPrimary }]}>Unlock everything — $0</Text>
+          </View>
+          <View style={styles.trialStep}>
+            <Text style={[styles.trialDay, { color: colours.accentGold }]}>Day 2</Text>
+            <Text style={[styles.trialDesc, { color: colours.textPrimary }]}>We'll remind you before billing</Text>
+          </View>
+          <View style={styles.trialStep}>
+            <Text style={[styles.trialDay, { color: colours.accentGold }]}>Day 3</Text>
+            <Text style={[styles.trialDesc, { color: colours.textPrimary }]}>Billing starts — cancel anytime</Text>
+          </View>
         </View>
-        <View style={styles.trialStep}>
-          <Text style={[styles.trialDay, { color: colours.accentGold }]}>Day 2</Text>
-          <Text style={[styles.trialDesc, { color: colours.textPrimary }]}>We'll remind you before billing</Text>
-        </View>
-        <View style={styles.trialStep}>
-          <Text style={[styles.trialDay, { color: colours.accentGold }]}>Day 3</Text>
-          <Text style={[styles.trialDesc, { color: colours.textPrimary }]}>Billing starts — cancel anytime</Text>
-        </View>
-      </View>
 
-      {/* Price Anchoring */}
-      <View style={[styles.priceCard, { backgroundColor: colours.accentGold + '15', borderColor: colours.accentGold }]}>
-        <Text style={[styles.priceLabel, { color: colours.accentGold }]}>BEST VALUE</Text>
-        <Text style={[styles.priceAmount, { color: colours.textPrimary }]}>$39.99/year</Text>
-        <Text style={[styles.priceSub, { color: colours.textMuted }]}>3-day free trial · $3.33/month</Text>
-        <Text style={[styles.priceSave, { color: colours.stateSuccess }]}>Save 83% vs weekly</Text>
-      </View>
+        {/* Price Anchoring */}
+        <TouchableOpacity
+          onPress={() => setSelectedPlan('yearly')}
+          style={[styles.priceCard, {
+            backgroundColor: selectedPlan === 'yearly' ? colours.accentGold + '15' : colours.backgroundSurface,
+            borderColor: selectedPlan === 'yearly' ? colours.accentGold : colours.borderSubtle,
+            borderWidth: selectedPlan === 'yearly' ? 1.5 : 0.5,
+          }]}
+        >
+          <Text style={[styles.priceLabel, { color: colours.accentGold }]}>BEST VALUE</Text>
+          <Text style={[styles.priceAmount, { color: colours.textPrimary }]}>$39.99/year</Text>
+          <Text style={[styles.priceSub, { color: colours.textMuted }]}>3-day free trial · $3.33/month</Text>
+          <Text style={[styles.priceSave, { color: colours.stateSuccess }]}>Save 83% vs weekly</Text>
+        </TouchableOpacity>
 
-      <View style={[styles.priceCard, { backgroundColor: colours.backgroundSurface, borderColor: colours.borderSubtle }]}>
-        <Text style={[styles.priceAmount, { color: colours.textPrimary, fontSize: 24 }]}>$4.99/week</Text>
-        <Text style={[styles.priceSub, { color: colours.textMuted }]}>No trial · Cancel anytime</Text>
-      </View>
+        <TouchableOpacity
+          onPress={() => setSelectedPlan('weekly')}
+          style={[styles.priceCard, {
+            backgroundColor: selectedPlan === 'weekly' ? colours.accentGold + '15' : colours.backgroundSurface,
+            borderColor: selectedPlan === 'weekly' ? colours.accentGold : colours.borderSubtle,
+            borderWidth: selectedPlan === 'weekly' ? 1.5 : 0.5,
+          }]}
+        >
+          <Text style={[styles.priceAmount, { color: colours.textPrimary, fontSize: 24 }]}>$4.99/week</Text>
+          <Text style={[styles.priceSub, { color: colours.textMuted }]}>No trial · Cancel anytime</Text>
+        </TouchableOpacity>
+      </ScrollView>
 
-      <TouchableOpacity onPress={handleFinish} style={[styles.ctaButton, { backgroundColor: colours.accentGold }]}>
-        <Text style={[styles.ctaText, { color: colours.accentGoldText }]}>Start Free Trial</Text>
+      <TouchableOpacity onPress={handleFinish} style={[styles.ctaButton, { backgroundColor: colours.accentGold, marginTop: 0 }]}>
+        <Text style={[styles.ctaText, { color: colours.accentGoldText }]}>
+          {selectedPlan === 'yearly' ? 'Start 3-Day Free Trial' : 'Subscribe Weekly'}
+        </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={handleFinish} style={{ alignItems: 'center', paddingVertical: 12 }}>
-        <Text style={{ fontSize: 12, color: colours.textMuted }}>Maybe later</Text>
+      <TouchableOpacity onPress={handleFinish} style={[styles.ctaButton, { backgroundColor: 'transparent', borderWidth: 1, borderColor: colours.borderSubtle, marginTop: 8 }]}>
+        <Text style={[styles.ctaText, { color: colours.textMuted }]}>Skip for now — I'll use the free tier</Text>
       </TouchableOpacity>
     </View>
   );

@@ -2,13 +2,13 @@
 
 ## ✅ All Phases Complete — Ready for Play Store Submission
 
-### P1 — Mobile Wrapper (Capacitor)
-- [x] Install `@capacitor/core` + `@capacitor/cli`
-- [x] `npx cap init` (app name: "DeepFlow", app ID: "com.deepflow.app")
-- [x] `npx cap add android`
-- [x] Install Android SDK + JDK 21
-- [x] Debug APK built (4.5MB) — competitive with 4.1MB target
-- [x] `capacitor.config.json` configured with safe-area, status bar, splash
+### P1 — Mobile Wrapper (React Native)
+- [x] React Native project scaffolded (`DeepFlowMobile/`)
+- [x] React Native app ID: `com.deepflowmobile`, versionCode 1, versionName "1.0"
+- [x] Debug APK builds and installs on device via `npx react-native run-android --active-arch-only`
+- [x] Hermes enabled (JS → bytecode compilation)
+- [x] `react-native-config` wired via `dotenv.gradle` for `.env` injection
+- [x] RevenueCat + Superwall SDK initialized and authenticated
 - [x] Deep link intent-filter for `deepflow://auth/callback`
 - [x] `.gitignore` protects `*.keystore` (except debug.keystore)
 
@@ -49,13 +49,36 @@
 
 ---
 
+### P6 — Post-Purchase Review Trigger (v1.0 Launch)
+- [x] Architecture document: `architecture/review_protocol.md`
+- [x] DB columns: `has_been_prompted`, `purchase_count`, `review_cooldown_until` on profiles
+- [x] Review manager: `src/lib/reviewManager.js` with Supabase gate
+- [x] RevenueCat listener: `addCustomerInfoUpdateListener` detects first purchase
+- [x] Modal: `FirstPurchaseReviewModal.jsx` with Midnight Luxe styling, confetti, noise
+- [x] Review prompt fires after first successful payment; single-pass + 30d cooldown
+
+### P7 — Launch Sequence & Security Hardening
+- [x] Architecture pivot: React Native reactivated as primary mobile layer, Capacitor retired
+- [x] `dotenv.gradle` applied to fix `react-native-config` env loading on Android
+- [x] `android:debuggable="false"` enforced in release manifest
+- [x] `PRIVACY_URL` crash fixed in `SettingsScreen.js`
+- [x] `mobile_release_protocol.md` rewritten for React Native (Hermes + ProGuard)
+- [x] `gemini.mmd` updated with Layer Architecture section
+- [x] Signed AAB generated with release keystore (app-release.aab, 33MB)
+- [x] RLS migration verified on production Supabase (all 4 tables return empty without auth)
+- [x] `architecture/findings.md` created with keywords, constraints, metrics scorecard
+- [x] `marketing/aso_descriptions.md` drafted (3 Play Store listings)
+- [x] `architecture/aso_strategy.md` created with keyword sniping & CSL strategy
+
 ## Post-Launch Backlog (v1.1+)
-- [ ] iOS: `npx cap add ios` + Xcode archive + TestFlight
+- [ ] iOS: React Native build + Xcode archive + TestFlight
 - [ ] Data migration script: anonymous→OAuth `user_id` reassignment
 - [ ] Play Store A/B test screenshots via Firebase A/B Testing
 - [ ] Mixpanel funnel dashboard for activation/retention cohorts
 - [ ] Direct Google Play Billing (fallback if Superwall is removed)
 - [ ] Extended subscription tier model (graveyard retention, unlimited sessions)
+- [ ] Accessibility Audit (WCAG 2.1 AA compliance for Web SPA)
+- [ ] Binaural Audio Engine (`src/lib/audioEngine.js`) for Web SPA
 
 ---
 

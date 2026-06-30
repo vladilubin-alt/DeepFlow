@@ -14,7 +14,9 @@ import { track, identify } from './src/services/AnalyticsService';
 import { isOnboardingComplete } from './src/services/FlareQuizService';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import { processQueue } from './src/services/SyncQueue';
-import { initSuperwall } from './src/services/SuperwallService';
+import { initSuperwall, setOnFirstPurchase } from './src/services/SuperwallService';
+
+import FirstPurchaseReviewModal from './src/components/FirstPurchaseReviewModal';
 
 import HomeScreen from './src/screens/HomeScreen';
 import ActiveSessionScreen from './src/screens/ActiveSessionScreen';
@@ -52,6 +54,7 @@ function AppContent() {
   const [session, setSession] = useState(null);
   const [splashFinished, setSplashFinished] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
   const { enabled: hapticEnabled } = useHaptic();
 
   const tabHaptic = useCallback(() => {
@@ -96,14 +99,25 @@ function AppContent() {
     return () => sub?.remove();
   }, []);
 
+  function hashUserId(id) {
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      const char = id.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash |= 0;
+    }
+    return 'u_' + Math.abs(hash).toString(36);
+  }
+
   useEffect(() => {
     if (!authReady) return;
     processQueue();
     initSuperwall();
+    setOnFirstPurchase(() => setShowReviewModal(true));
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
-        identify(user.id);
-        track('App Opened', { userId: user.id });
+        identify(hashUserId(user.id));
+        track('App Opened');
       }
     });
 
@@ -153,9 +167,9 @@ function AppContent() {
   return (
     <View style={{ flex: 1, backgroundColor: colours.backgroundBase }}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-      {showOnboarding && <OnboardingScreen onComplete={handleOnboardingComplete} />}
-      
-      {authReady ? (
+      {showOnboarding ? (
+        <OnboardingScreen onComplete={handleOnboardingComplete} />
+      ) : authReady ? (
         !session ? (
           <AuthScreen colours={colours} />
         ) : (
@@ -239,6 +253,11 @@ function AppContent() {
           onFinish={() => setSplashFinished(true)}
         />
       )}
+
+      <FirstPurchaseReviewModal
+        visible={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+      />
     </View>
   );
 }

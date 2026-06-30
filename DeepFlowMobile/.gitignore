@@ -1,80 +1,69 @@
-# OSX
-#
-.DS_Store
 
-# Xcode
-#
-build/
-*.pbxuser
-!default.pbxuser
-*.mode1v3
-!default.mode1v3
-*.mode2v3
-!default.mode2v3
-*.perspectivev3
-!default.perspectivev3
-xcuserdata
-*.xccheckout
-*.moved-aside
-DerivedData
-*.hmap
-*.ipa
-*.xcuserstate
-**/.xcode.env.local
-
-# Android/IntelliJ
-#
-build/
-.idea
-.gradle
-local.properties
-*.iml
-*.hprof
-.cxx/
-*.keystore
-!debug.keystore
-.kotlin/
-
-# Environment variables (react-native-config)
-.env
-.env.*
 !.env.example
-
-# node.js
-#
-node_modules/
-npm-debug.log
-yarn-error.log
-
-# fastlane
-#
-# It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the
-# screenshots whenever they are needed.
-# For more information about the recommended setup visit:
-# https://docs.fastlane.tools/best-practices/source-control/
-
-**/fastlane/report.xml
-**/fastlane/Preview.html
-**/fastlane/screenshots
-**/fastlane/test_output
-
-# Bundle artifact
-*.jsbundle
-
-# Ruby / CocoaPods
-**/Pods/
-/vendor/bundle/
-
-# Temporary files created by Metro to check the health of the file watcher
-.metro-health-check*
-
-# testing
-/coverage
-
-# Yarn
-.yarn/*
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+!debug.keystore
+!default.mode1v3
+!default.mode2v3
+!default.pbxuser
+!default.perspectivev3
+#
+# Android/IntelliJ
+# Bundle artifact
+# Environment variables (react-native-config)
+# For more information about the recommended setup visit:
+# It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the
+# OSX
+# Ruby / CocoaPods
+# Temporary files created by Metro to check the health of the file watcher
+# Xcode
+# Yarn
+# fastlane
+# https://docs.fastlane.tools/best-practices/source-control/
+# node.js
+# screenshots whenever they are needed.
+# testing
+**/.xcode.env.local
+**/Pods/
+**/fastlane/Preview.html
+**/fastlane/report.xml
+**/fastlane/screenshots
+**/fastlane/test_output
+*.aab
+*.apk
+*.hmap
+*.hprof
+*.iml
+*.ipa
+*.jsbundle
+*.keystore
+*.mode1v3
+*.mode2v3
+*.moved-aside
+*.pbxuser
+*.perspectivev3
+*.xccheckout
+*.xcuserstate
+.DS_Store
+.cxx/
+.env
+.env.*
+.gradle
+.idea
+.kotlin/
+.metro-health-check*
+.yarn/*
+/coverage
+/vendor/bundle/
+DerivedData
+build/
+index.android.bundle
+keystore.properties
+local.properties
+node_modules/
+npm-debug.log
+xcuserdata
+yarn-error.log

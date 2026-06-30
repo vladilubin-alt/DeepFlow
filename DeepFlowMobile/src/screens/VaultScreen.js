@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase';
 import { useGraveyard } from '../hooks/useGraveyard';
 import { triggerGraceTokenPaywall } from '../services/SuperwallService';
 import { track } from '../services/AnalyticsService';
+import Purchases from 'react-native-purchases';
 
 function timeAgo(date) {
   const hours = Math.floor((Date.now() - date.getTime()) / 3600000);
@@ -34,22 +35,33 @@ export default function VaultScreen() {
   }, [fetchEntries]);
 
   function costInfo(hoursAgo) {
-    if (hoursAgo < 1) return { badge: '50 tokens', colour: colours.stateSuccess, label: 'paid' };
+    if (hoursAgo < 1) return { badge: '1 Token', colour: colours.stateSuccess, label: 'token' };
     if (hoursAgo < 168) return { badge: '$0.99', colour: colours.accentGold, label: 'paid' };
     if (hoursAgo < 720) return { badge: '$1.99', colour: colours.stateDangerMuted, label: 'paid' };
-    return { badge: 'gone', colour: '#2a2510', label: 'expired' };
+    return { badge: 'Purged', colour: '#2a2510', label: 'expired' };
   }
+
+  const navigateToRecoveredSession = (item) => {
+    const wordCount = item.word_count || 100;
+    const estimatedMinutes = Math.max(3, Math.min(60, Math.round(wordCount / 20)));
+    navigation.navigate('HomeTab', {
+      screen: 'ActiveSession',
+      params: {
+        durationMinutes: estimatedMinutes,
+        targetWords: wordCount,
+        sensoryMode: 'off',
+        aiMode: 'silent',
+        initialText: item.content || '',
+      },
+    });
+  };
 
   const handleRecover = async (item) => {
     if (recovering) return;
-    const hoursAgo = item.deleted_at
-      ? (Date.now() - new Date(item.deleted_at).getTime()) / 3600000
-      : 0;
+    const deletedAt = item.deleted_at ? new Date(item.deleted_at).getTime() : 0;
+    const hoursAgo = deletedAt ? (Date.now() - deletedAt) / 3600000 : 0;
     const cost = costInfo(hoursAgo);
     if (cost.label === 'expired') return;
-
-    const wordCount = item.word_count || 100;
-    const estimatedMinutes = Math.max(3, Math.min(60, Math.round(wordCount / 20)));
 
     setRecovering(item.id);
     try {
@@ -57,42 +69,39 @@ export default function VaultScreen() {
       const user = session?.user;
       if (!user) return;
 
-      if (graceTokens > 0) {
-        await supabase.from('profiles').update({ grace_tokens: graceTokens - 1 }).eq('id', user.id);
-        setGraceTokens((t) => t - 1);
-        track('Vault Recovered', { wordCount: item.word_count, method: 'grace_token' });
-        navigation.navigate('HomeTab', {
-          screen: 'ActiveSession',
-          params: {
-            durationMinutes: estimatedMinutes,
-            targetWords: wordCount,
-            sensoryMode: 'off',
-            aiMode: 'silent',
-            initialText: item.content || '',
-          },
-        });
-      } else {
-        triggerGraceTokenPaywall(async () => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('grace_tokens')
-            .eq('id', user.id)
-            .single();
-          const newTokens = (profile?.grace_tokens ?? 0) + 3;
-          await supabase.from('profiles').update({ grace_tokens: newTokens }).eq('id', user.id);
-          setGraceTokens(newTokens);
-          track('Vault Recovered', { wordCount: item.word_count, method: 'paywall' });
-          navigation.navigate('HomeTab', {
-            screen: 'ActiveSession',
-            params: {
-              durationMinutes: estimatedMinutes,
-              targetWords: wordCount,
-              sensoryMode: 'off',
-              aiMode: 'silent',
-              initialText: item.content || '',
-            },
+      if (cost.label === 'token') {
+        if (graceTokens > 0) {
+          await supabase.from('profiles').update({ grace_tokens: graceTokens - 1 }).eq('id', user.id);
+          setGraceTokens((t) => t - 1);
+          track('Vault Recovered', { wordCount: item.word_count, method: 'grace_token' });
+          navigateToRecoveredSession(item);
+        } else {
+          triggerGraceTokenPaywall(async () => {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('grace_tokens')
+              .eq('id', user.id)
+              .single();
+            const newTokens = (profile?.grace_tokens ?? 0) + 3;
+            await supabase.from('profiles').update({ grace_tokens: newTokens }).eq('id', user.id);
+            setGraceTokens(newTokens);
+            track('Vault Recovered', { wordCount: item.word_count, method: 'paywall' });
+            navigateToRecoveredSession(item);
           });
-        });
+        }
+      } else if (cost.label === 'paid') {
+        const productId = hoursAgo < 168 ? 'vault_recovery_0_99' : 'vault_recovery_1_99';
+        try {
+          const { customerInfo } = await Purchases.purchaseProduct(productId);
+          if (customerInfo.entitlements.active['vault_recovery']?.isActive) {
+            track('Vault Recovered', { wordCount: item.word_count, method: 'paid', productId });
+            navigateToRecoveredSession(item);
+          }
+        } catch (e) {
+          if (!e.userCancelled) {
+            console.warn('[Vault] Purchase failed:', e.message);
+          }
+        }
       }
     } finally {
       setRecovering(null);

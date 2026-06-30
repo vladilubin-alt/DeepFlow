@@ -1,13 +1,13 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { supabase } from '../lib/supabase';
 import { GOOGLE_WEB_CLIENT_ID } from '../config/env';
 
 GoogleSignin.configure({
   webClientId: GOOGLE_WEB_CLIENT_ID,
-  offlineAccess: true,
+  offlineAccess: false,
 });
 
 const MAX_ATTEMPTS = 5;
@@ -69,30 +69,17 @@ export default function AuthScreen({ colours }) {
     setLoading(true);
     try {
       await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      const idToken = userInfo.idToken;
-      if (!idToken) {
-        Alert.alert('Google Sign-In Error', 'No ID token received.');
-        setLoading(false);
-        return;
-      }
-      const { error } = await supabase.auth.signInWithIdToken({
+      const { data } = await GoogleSignin.signIn();
+      const { idToken } = data;
+      if (!idToken) throw new Error('No ID token returned');
+
+      const { data: authData, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: idToken,
       });
-      if (error) {
-        Alert.alert('Google Sign-In Error', 'Authentication failed. Please try again.');
-      }
-    } catch (e) {
-      if (e.code === statusCodes.SIGN_IN_CANCELLED) {
-        // User cancelled - do nothing
-      } else if (e.code === statusCodes.IN_PROGRESS) {
-        Alert.alert('Google Sign-In', 'Sign-in already in progress.');
-      } else if (e.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        Alert.alert('Google Sign-In', 'Google Play Services not available. Please update.');
-      } else {
-        Alert.alert('Google Sign-In Error', 'Something went wrong. Please try again.');
-      }
+      if (error) throw error;
+    } catch (error) {
+      Alert.alert('Google Sign-In Error', error.message);
     } finally {
       setLoading(false);
     }
@@ -148,7 +135,7 @@ export default function AuthScreen({ colours }) {
         <TouchableOpacity
           onPress={handleEmailAuth}
           disabled={loading}
-          accessibilityLabel={isSignUp ? 'Sign Up' : 'Sign In'}
+          accessibilityLabel={isSignUp ? 'Create Account' : 'Sign In'}
           accessibilityRole="button"
           style={{
             backgroundColor: colours.accentGold,
@@ -163,13 +150,13 @@ export default function AuthScreen({ colours }) {
             <ActivityIndicator color={colours.accentGoldText} />
           ) : (
             <Text style={{ fontSize: 14, color: colours.accentGoldText, fontWeight: '500' }}>
-              {isSignUp ? 'Sign Up' : 'Sign In'}
+              {isSignUp ? 'Create Account' : 'Sign In'}
             </Text>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={handleGoogleSignIn}
+          onPress={() => { console.log('[Google] Button tapped!'); handleGoogleSignIn(); }}
           disabled={loading}
           accessibilityLabel="Continue with Google"
           accessibilityRole="button"
@@ -190,12 +177,12 @@ export default function AuthScreen({ colours }) {
 
         <TouchableOpacity
           onPress={() => setIsSignUp(!isSignUp)}
-          accessibilityLabel={isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+          accessibilityLabel={isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Create Account"}
           accessibilityRole="button"
           style={{ marginTop: 16, alignItems: 'center' }}
         >
           <Text style={{ fontSize: 12, color: colours.textMuted }}>
-            {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+            {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Create Account"}
           </Text>
         </TouchableOpacity>
       </View>

@@ -1,9 +1,20 @@
 import { Mixpanel } from 'mixpanel-react-native';
 import Config from 'react-native-config';
+import { getAnalyticsConsent } from './ConsentService';
 
 const TOKEN = Config.MIXPANEL_TOKEN;
 
 let mixpanelInstance = null;
+let consentChecked = false;
+let consentGranted = false;
+
+async function checkConsent() {
+  if (consentChecked) return consentGranted;
+  const consent = await getAnalyticsConsent();
+  consentGranted = consent === 'accepted';
+  consentChecked = true;
+  return consentGranted;
+}
 
 function init() {
   if (mixpanelInstance || !TOKEN) return;
@@ -15,7 +26,9 @@ function init() {
   }
 }
 
-export function track(event, properties) {
+export async function track(event, properties) {
+  const ok = await checkConsent();
+  if (!ok) return;
   init();
   if (!mixpanelInstance) return;
   try {
@@ -25,7 +38,9 @@ export function track(event, properties) {
   }
 }
 
-export function identify(userId) {
+export async function identify(userId) {
+  const ok = await checkConsent();
+  if (!ok) return;
   init();
   if (!mixpanelInstance) return;
   try {
@@ -35,7 +50,9 @@ export function identify(userId) {
   }
 }
 
-export function peopleSet(properties) {
+export async function peopleSet(properties) {
+  const ok = await checkConsent();
+  if (!ok) return;
   init();
   if (!mixpanelInstance) return;
   try {
@@ -46,4 +63,9 @@ export function peopleSet(properties) {
   } catch (e) {
     console.warn('[Analytics] People set failed:', e.message);
   }
+}
+
+export function resetConsentCache() {
+  consentChecked = false;
+  consentGranted = false;
 }

@@ -11,13 +11,22 @@ DeepFlow is an ADHD-focused writing timer designed to help users enter and maint
 ## Architectural Invariants
 - **Deterministic Business Logic**: Timer state, guillotine logic, penalty calculations, and session logging must be 100% deterministic and validated on the backend.
 - **Probabilistic UI**: UI transitions, feedback loops, and decorative elements can be dynamic/probabilistic to maintain high novelty.
-- **Capacitor Build Rules**:
-  - Safe-area insets: Use `env(safe-area-inset-top)` and `env(safe-area-inset-bottom)` on all full-width containers to avoid notches and home indicators.
-  - Status bar: Configure `StatusBar.setOverlaysWebView({ overlay: false })` on app init to prevent content from rendering under the status bar.
-  - Splash screen: Use `@capacitor/splash-screen` plugin with Midnight Luxe background color (`#0D0D12`) — no logo, just a clean fade.
-  - Keyboard handling: `Keyboard.setResizeMode('body')` on Android to prevent the keyboard from compressing the viewport.
-  - File access: Capacitor WebView uses `http://localhost` — no CORS issues for Supabase REST calls.
-  - Deep links (future): Register custom URL scheme `deepflow://` for OAuth callback redirects.
+
+## Layer Architecture
+
+| Layer | Status | Delivery |
+|-------|--------|----------|
+| **React Native** (Mobile) | **Active — Primary Mobile Layer** | APK via Hermes + ProGuard, Google Play Store |
+| **Capacitor** (Mobile wrapper) | **Retired** — preserved below for reference | Historical; replaced by React Native |
+| **React SPA** (Web) | **Active — Web delivery** | Vite build → Netlify (https://gleeful-liger-6f788b.netlify.app) |
+
+> **Capacitor Build Rules (retained for reference)** — These were used when Capacitor was the mobile layer. They are no longer active but preserved for audit traceability:
+> - Safe-area insets: Use `env(safe-area-inset-top)` and `env(safe-area-inset-bottom)` on all full-width containers to avoid notches and home indicators.
+> - Status bar: Configure `StatusBar.setOverlaysWebView({ overlay: false })` on app init to prevent content from rendering under the status bar.
+> - Splash screen: Use `@capacitor/splash-screen` plugin with Midnight Luxe background color (`#0D0D12`) — no logo, just a clean fade.
+> - Keyboard handling: `Keyboard.setResizeMode('body')` on Android to prevent the keyboard from compressing the viewport.
+> - File access: Capacitor WebView uses `http://localhost` — no CORS issues for Supabase REST calls.
+> - Deep links (future): Register custom URL scheme `deepflow://` for OAuth callback redirects.
 
 ## Integrations
 
@@ -36,7 +45,7 @@ DeepFlow is an ADHD-focused writing timer designed to help users enter and maint
   - Trigger 1: Initial app launch → Flare Quiz
   - Trigger 2: Post-session "Focus Report" → Value demonstration
   - Trigger 3: Attempting to use a locked 4th Grace Token → Paywall
-- **Dependency**: `@superwall/react-native-core` (React Native) / Superwall Web SDK (Capacitor web wrapper).
+- **Dependency**: `@superwall/react-native-core` (React Native).
 
 ### Mixpanel (Product Analytics)
 - **Role**: Event tracking for funnels — session start, guillotine, grace token use, vault recovery.
@@ -188,3 +197,6 @@ Detects gibberish by analyzing vowel/consonant ratios and clusters.
 | 2026-06-22 | v0.4.2 | SSH Git remote (ed25519), Netlify-to-GitHub CI/CD linkage | DeepFlow |
 | 2026-06-22 | v0.4.2 | Supabase Auth Site URL + Redirect URLs configured for production origin | DeepFlow |
 | 2026-06-22 | v0.4.2 | Project Memory sealed — all 5 Phases complete | DeepFlow |
+| 2026-06-30 | v0.4.3 | RevenueCat crash fix: applied `dotenv.gradle` in `android/app/build.gradle` to load `.env` vars into react-native-config | DeepFlow |
+| 2026-06-30 | v0.4.3 | Architecture pivot: React Native reactivated as primary mobile layer, Capacitor retired to reference-only | DeepFlow |
+
