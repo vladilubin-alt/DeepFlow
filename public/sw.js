@@ -1,3 +1,4 @@
+const SW_VERSION = '1.0.0';
 const CACHE_NAME = 'deepflow-v1';
 const STATIC_ASSETS = [
   '/',

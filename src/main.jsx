@@ -17,6 +17,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    const swUrl = '/sw.js?v=' + new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    navigator.serviceWorker.register(swUrl).catch(() => {});
   });
 }

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { useDeepFlowSession } from './hooks/useDeepFlowSession';
@@ -12,14 +12,16 @@ import FlowOrb from './components/FlowOrb';
 import SessionSetup from './components/SessionSetup';
 import SensoryLayer from './components/SensoryLayer';
 import VaultModal from './components/VaultModal';
-import HistoryView from './components/HistoryView';
-import AuthScreen from './components/AuthScreen';
-import EmailConfirmed from './components/EmailConfirmed';
-import FlareQuizModal, { isOnboardingComplete, getStoredFlare, FLARE_DEFAULTS } from './components/FlareQuizModal';
-import FocusReportModal from './components/FocusReportModal';
-import PrivacyPolicy from './components/PrivacyPolicy';
 import CookieConsent from './components/CookieConsent';
+import { isOnboardingComplete, getStoredFlare, FLARE_DEFAULTS } from './components/FlareQuizModal';
 import { enableAnalytics } from './lib/analytics';
+
+const HistoryView = lazy(() => import('./components/HistoryView'));
+const AuthScreen = lazy(() => import('./components/AuthScreen'));
+const EmailConfirmed = lazy(() => import('./components/EmailConfirmed'));
+const FlareQuizModal = lazy(() => import('./components/FlareQuizModal'));
+const FocusReportModal = lazy(() => import('./components/FocusReportModal'));
+const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
 
 function BottomNav() {
   const navigate = useNavigate();
@@ -188,7 +190,7 @@ export default function App() {
         setUserId(session.user.id);
         setAuth(session.user.id, session.access_token);
         identify(session.user.id);
-        track('App Opened', { userId: session.user.id });
+        track('App Opened');
         setReady(true);
       }
       setAuthLoading(false);
@@ -294,27 +296,27 @@ export default function App() {
 
   const recentVault = entries.slice(0, 3);
 
+  const SuspenseFallback = <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <p style={{ color: '#666', fontSize: 14 }}>Loading...</p>
+  </div>;
+
   // Privacy Policy is always accessible regardless of auth state
   if (window.location.pathname === '/privacy') {
     return <PrivacyPolicy />;
   }
 
   if (authLoading) {
-    return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: '#666', fontSize: 14 }}>Loading...</p>
-      </div>
-    );
+    return SuspenseFallback;
   }
 
   if (!user) {
-    return <AuthScreen onAuth={(session) => { setUser(session.user); setAuth(session.user.id, session.access_token); setReady(true); }} />;
+    return <Suspense fallback={SuspenseFallback}><AuthScreen onAuth={(session) => { setUser(session.user); setAuth(session.user.id, session.access_token); setReady(true); }} /></Suspense>;
   }
 
   return (
     <>
-      {showQuiz && <FlareQuizModal onComplete={handleQuizComplete} role="dialog" aria-modal="true" aria-label="Flare type selection" />}
-      <FocusReportModal
+      {showQuiz && <Suspense fallback={null}><FlareQuizModal onComplete={handleQuizComplete} role="dialog" aria-modal="true" aria-label="Flare type selection" /></Suspense>}
+      <Suspense fallback={null}><FocusReportModal
         visible={showFocusReport}
         onDismiss={dismissFocusReport}
         wordsWritten={reportData?.wordsWritten ?? 0}
@@ -324,14 +326,14 @@ export default function App() {
         graceTokens={graceTokens}
         onUseGraceToken={reportData?.guillotined ? handleUseGraceToken : undefined}
         onGiveUp={reportData?.guillotined ? handleGiveUp : undefined}
-      />
-      <Routes>
+      /></Suspense>
+      <Suspense fallback={SuspenseFallback}><Routes>
       <Route path="/auth/confirm" element={<EmailConfirmed />} />
       <Route path="/history" element={<HistoryView />} />
       <Route path="/" element={
         <div className="h-screen flex flex-col">
           <div className="flex-1 min-h-0 flex flex-col p-3 md:p-8 max-w-7xl mx-auto w-full gap-4 md:gap-6 pb-24">
-            <Header syncStatus={syncStatus} onOpenVault={handleOpenVault} />
+            <Header syncStatus={syncStatus} onOpenVault={handleOpenVault} sessionState={sessionState} />
 
             <main className={`grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6 flex-1 min-h-0 ${isRunning ? 'grid-rows-1' : ''}`}>
               <div className="order-1 lg:col-span-3 min-h-0">
@@ -425,8 +427,18 @@ export default function App() {
           </footer>
         </div>
       } />
-    </Routes>
-    <CookieConsent onConsent={(c) => { if (c === 'accepted') enableAnalytics(); }} />
+    </Routes></Suspense>
+    <CookieConsent onConsent={(c) => {
+      if (c === 'accepted') {
+        enableAnalytics();
+        const stored = supabase.auth.getUser().then(({ data: { user } }) => {
+          if (user) {
+            identify(user.id);
+            track('App Opened');
+          }
+        });
+      }
+    }} />
     </>
   );
 }

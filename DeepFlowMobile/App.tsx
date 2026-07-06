@@ -17,6 +17,8 @@ import { processQueue } from './src/services/SyncQueue';
 import { initSuperwall, setOnFirstPurchase } from './src/services/SuperwallService';
 
 import FirstPurchaseReviewModal from './src/components/FirstPurchaseReviewModal';
+import CookieConsent from './src/components/CookieConsent';
+import { enableAnalytics } from './src/services/AnalyticsService';
 
 import HomeScreen from './src/screens/HomeScreen';
 import ActiveSessionScreen from './src/screens/ActiveSessionScreen';
@@ -258,6 +260,18 @@ function AppContent() {
         visible={showReviewModal}
         onClose={() => setShowReviewModal(false)}
       />
+
+      <CookieConsent onConsent={(c) => {
+        if (c === 'accepted') {
+          enableAnalytics();
+          supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) {
+              identify(hashUserId(user.id));
+              track('App Opened');
+            }
+          });
+        }
+      }} />
     </View>
   );
 }

@@ -93,7 +93,7 @@ export default function VaultScreen() {
         const productId = hoursAgo < 168 ? 'vault_recovery_0_99' : 'vault_recovery_1_99';
         try {
           const { customerInfo } = await Purchases.purchaseProduct(productId);
-          if (customerInfo.entitlements.active['vault_recovery']?.isActive) {
+          if (customerInfo.entitlements.active.vault_recovery?.isActive) {
             track('Vault Recovered', { wordCount: item.word_count, method: 'paid', productId });
             navigateToRecoveredSession(item);
           }

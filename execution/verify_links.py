@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+# verify_links.py — DeepFlow Connectivity Verifier
+#
+# Security note: This script makes server-to-server requests (not browser).
+# CORS is not applicable here. Supabase returns Access-Control-Allow-Origin: *
+# by design at the proxy layer — this is safe for server-to-server calls.
+# Do NOT add credentials: 'include' to any Supabase fetch in client code,
+# as browsers will reject wildcard CORS responses with credentials.
+
 import os
 import urllib.request
 import urllib.error
@@ -23,6 +31,10 @@ def verify_supabase(url, anon_key):
     print("--- Verifying Supabase Connectivity ---")
     if not url or url == "placeholder_supabase_url":
         print("❌ Supabase URL is not configured.")
+        return False
+
+    if 'VITE_' in url:
+        print("❌ URL appears to be a VITE_ prefixed variable, not SUPABASE_URL")
         return False
     
     # Query the profiles table using the anon key to verify connectivity

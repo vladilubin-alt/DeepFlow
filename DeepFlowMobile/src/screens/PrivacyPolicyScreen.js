@@ -40,6 +40,9 @@ export default function PrivacyPolicyScreen() {
           <SubTitle title="2.3 Device & Technical Data" colours={colours} />
           <Bullet text="Device type / OS version — collected by RevenueCat and Mixpanel." colours={colours} />
           <Bullet text="Push notification token — stored only if you enable reminders." colours={colours} />
+          <Body colours={colours}>
+            Analytics are opt-in only. On first launch, you will be asked to accept or reject analytics tracking. If rejected, no events are sent.
+          </Body>
         </Section>
 
         <Section title="3. How We Use Your Data" colours={colours}>

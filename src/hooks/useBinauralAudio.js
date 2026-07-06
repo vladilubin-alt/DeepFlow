@@ -31,16 +31,15 @@ export function useBinauralAudio() {
         gain.gain.linearRampToValueAtTime(0.14, ctxRef.current?.currentTime + 0.3);
         break;
       case 'guillotined':
-        gain.gain.linearRampToValueAtTime(0, ctxRef.current?.currentTime + 0.8);
-        break;
       case 'completed':
-        gain.gain.linearRampToValueAtTime(0, ctxRef.current?.currentTime + 1.5);
+        gain.gain.linearRampToValueAtTime(0, ctxRef.current?.currentTime + 1);
+        setTimeout(stop, 1100);
         break;
       default:
         gain.gain.linearRampToValueAtTime(0.08, ctxRef.current?.currentTime + 0.3);
         break;
     }
-  }, []);
+  }, [stop]);
 
   const start = useCallback((mode) => {
     stop();
@@ -59,17 +58,24 @@ export function useBinauralAudio() {
       const baseFreq = mode === 'alpha' ? 200 : 220;
       const beatFreq = mode === 'alpha' ? 6 : 14;
 
+      const leftPanner = ctx.createStereoPanner();
+      leftPanner.pan.value = -1;
+      const rightPanner = ctx.createStereoPanner();
+      rightPanner.pan.value = 1;
+
       const oscL = ctx.createOscillator();
       oscL.type = 'sine';
       oscL.frequency.value = baseFreq;
-      oscL.connect(gain);
+      oscL.connect(leftPanner);
+      leftPanner.connect(gain);
       oscL.start();
       oscLeftRef.current = oscL;
 
       const oscR = ctx.createOscillator();
       oscR.type = 'sine';
       oscR.frequency.value = baseFreq + beatFreq;
-      oscR.connect(gain);
+      oscR.connect(rightPanner);
+      rightPanner.connect(gain);
       oscR.start();
       oscRightRef.current = oscR;
 

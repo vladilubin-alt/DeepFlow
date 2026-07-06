@@ -44,11 +44,21 @@ export async function track(event, properties) {
   }
 }
 
+function hashUserId(id) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    const char = id.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return 'u_' + Math.abs(hash).toString(36);
+}
+
 export async function identify(userId) {
   await init();
   if (!initialized) return;
   try {
-    mixpanel.mod.identify(userId);
+    mixpanel.mod.identify(hashUserId(userId));
   } catch (e) {
     console.warn('[Analytics] Identify failed:', e.message);
   }

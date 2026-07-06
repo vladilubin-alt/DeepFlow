@@ -41,7 +41,7 @@ export const dark = {
 
   textPrimary: '#D3D1C7',
   textSecondary: '#8A877F',
-  textMuted: '#80807A',
+  textMuted: '#8C8C84',
   textDisabled: '#2A2510',
 
   accentGold: '#EF9F27',

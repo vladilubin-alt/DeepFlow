@@ -38,6 +38,10 @@ export default function AuthScreen({ colours }) {
       Alert.alert('Error', 'Please enter email and password');
       return;
     }
+    if (isSignUp && password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters.');
+      return;
+    }
     if (Date.now() < lockoutUntilRef.current) {
       const secs = Math.ceil((lockoutUntilRef.current - Date.now()) / 1000);
       Alert.alert('Too many attempts', `Please wait ${secs} seconds before trying again.`);

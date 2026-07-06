@@ -5,19 +5,22 @@ import notifee, { AndroidImportance } from '@notifee/react-native';
 const REMINDER_KEY = '@deepflow/settings/reminder';
 const REMINDER_TIME_KEY = '@deepflow/settings/reminder_time';
 
-const CHANNEL_ID = 'deepflow-reminders';
+const CHANNELS = [
+  { id: 'deepflow-reminders', name: 'Daily Reminders', importance: AndroidImportance.HIGH },
+  { id: 'deepflow-sessions', name: 'Session Alerts', importance: AndroidImportance.DEFAULT },
+  { id: 'deepflow-streaks', name: 'Streak Updates', importance: AndroidImportance.LOW },
+];
 
-async function ensureChannel() {
+async function ensureChannels() {
   if (Platform.OS !== 'android') return;
-  try {
-    await notifee.createChannel({
-      id: CHANNEL_ID,
-      name: 'Daily Reminders',
-      importance: AndroidImportance.HIGH,
-      vibration: true,
-    });
-  } catch (e) {}
+  for (const ch of CHANNELS) {
+    try {
+      await notifee.createChannel({ ...ch, vibration: true });
+    } catch (e) {}
+  }
 }
+
+const CHANNEL_ID = CHANNELS[0].id;
 
 export async function requestNotificationPermission() {
   try {
@@ -33,7 +36,7 @@ export async function requestNotificationPermission() {
 
 export async function scheduleDailyReminder(hour = 9, minute = 0) {
   try {
-    await ensureChannel();
+    await ensureChannels();
     await notifee.cancelAllNotifications();
 
     const now = new Date();

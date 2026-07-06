@@ -38,13 +38,23 @@ export async function track(event, properties) {
   }
 }
 
+function hashUserId(id) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    const char = id.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return 'u_' + Math.abs(hash).toString(36);
+}
+
 export async function identify(userId) {
   const ok = await checkConsent();
   if (!ok) return;
   init();
   if (!mixpanelInstance) return;
   try {
-    mixpanelInstance.identify(userId);
+    mixpanelInstance.identify(hashUserId(userId));
   } catch (e) {
     console.warn('[Analytics] Identify failed:', e.message);
   }
@@ -63,6 +73,11 @@ export async function peopleSet(properties) {
   } catch (e) {
     console.warn('[Analytics] People set failed:', e.message);
   }
+}
+
+export function enableAnalytics() {
+  consentChecked = false;
+  consentGranted = false;
 }
 
 export function resetConsentCache() {

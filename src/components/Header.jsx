@@ -22,10 +22,20 @@ function syncDotColor(status) {
   }
 }
 
-export default function Header({ syncStatus, onOpenVault }) {
+const SESSION_LABELS = {
+  idle: null,
+  writing: 'Writing Session',
+  warning: '⚠ Warning',
+  guillotined: '✂ Guillotined',
+  completed: '✓ Complete',
+  saved_by_grace: '✦ Grace Token',
+};
+
+export default function Header({ syncStatus, onOpenVault, sessionState }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isHistory = location.pathname === '/history';
+  const sessionLabel = SESSION_LABELS[sessionState];
 
   const handleSignOut = async () => {
     // S-07: scope:'global' revokes the server-side refresh token so the
@@ -46,7 +56,13 @@ export default function Header({ syncStatus, onOpenVault }) {
           <div className="flex items-center gap-2 sm:block">
             <h1 className="text-lg sm:text-3xl md:text-4xl text-champagne font-serif italic tracking-wide shrink-0">DeepFlow</h1>
             <p className="hidden sm:block text-xs text-stone-400 font-sans mt-0.5 uppercase tracking-widest">ADHD Writing Instrument</p>
+            {sessionLabel && (
+              <p className="text-xs text-champagne/60 font-mono-custom mt-0.5 sm:hidden">{sessionLabel}</p>
+            )}
           </div>
+        )}
+        {sessionLabel && (
+          <p className="hidden sm:block text-xs text-champagne/60 font-mono-custom ml-2">{sessionLabel}</p>
         )}
       </div>
 
