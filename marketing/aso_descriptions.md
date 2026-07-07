@@ -27,7 +27,7 @@
 
 **Long Description:**
 
-Focus writing app designed for ADHD minds that need structure without the shame spiral. DeepFlow is the distraction-free writing timer that forgives your humanity.
+Focus writing app designed for ADHD minds that need structure without the shame spiral. DeepFlow is the distraction-free writing timer that forgives your humanity. This focus writing app combines Pomodoro timer structure with ADHD-friendly streak protection.
 
 Stop fighting your brain. The Forgiving Guillotine gives you a 10-second fuse — if you pause, the timer doesn't punish you. Grace Tokens protect your streak when life gets in the way. Every session builds momentum, not guilt.
 
@@ -51,7 +51,7 @@ Built by someone who knows what it's like to stare at a blank page for 45 minute
 
 **Long Description:**
 
-Pomodoro timer reimagined for writers. DeepFlow combines the proven focus-writing-app structure with a distraction-free editor that actually respects your flow state.
+Pomodoro timer reimagined for writers. DeepFlow combines the proven focus writing app structure with a distraction-free editor that actually respects your flow state. This Pomodoro timer keeps you in flow without the anxiety.
 
 Write in focused sprints. The timer runs, you write. No notifications, no noise, no excuses. When the guillotine drops, you've already won.
 
@@ -74,7 +74,7 @@ Dark mode included. Streaks protected by Grace Tokens. Binaural audio for deep f
 
 **Long Description:**
 
-Deep work timer for people who struggle to start. DeepFlow is the ADHD writing app that turns your phone into a focus tool instead of a distraction.
+Deep work timer for people who struggle to start. DeepFlow is the ADHD writing app that turns your phone into a focus tool instead of a distraction. This distraction-free deep work timer builds momentum without the guilt.
 
 **The flow state formula:**
 1. Set your target (words or minutes)
@@ -102,7 +102,7 @@ For writers who want to write, not configure.
 
 **Long Description:**
 
-Time blindness is real. DeepFlow replaces the anxiety of watching a clock with a visual flow-state indicator that keeps you oriented without breaking your focus.
+Time blindness is real. DeepFlow replaces the anxiety of watching a clock with a visual flow-state indicator that keeps you oriented without breaking your focus. This focus writing app uses a distraction-free timer built for ADHD brains.
 
 No countdown. No numbers. Just a growing orb that shows your progress. When you're in flow, the timer fades into the background. When you drift, the guillotine gently reminds you.
 

@@ -7,6 +7,10 @@
 ## Gate 1: RLS Enforcement
 - [ ] Verify unauthenticated API calls return `[]` or `401`, not data
 - [ ] Command: `curl -H "apikey: $SUPABASE_ANON_KEY" $SUPABASE_URL/rest/v1/profiles`
+- [ ] RLS policies use `auth.uid()` to restrict each table to the owning user
+- [ ] Apply via: `supabase/migrations/001_enable_rls.sql` or `stages/05_Trigger/apply_rls.sh`
+- [ ] Verify: `SELECT tablename, rowsecurity FROM pg_tables WHERE schemaname = 'public' AND tablename IN ('profiles', 'writing_sessions', 'graveyard', 'drafts');`
+- [ ] Verify policies: `SELECT schemaname, tablename, policyname FROM pg_policies WHERE schemaname = 'public' ORDER BY tablename, policyname;`
 
 ## Gate 2: Secret Management
 - [ ] `.env` files are NOT tracked by git (`git ls-files .env` returns empty)
@@ -22,9 +26,17 @@
 
 ## Gate 4: Release Build Hardening
 - [ ] ProGuard enabled (`def enableProguardInReleaseBuilds = true`)
-- [ ] `android:debuggable="false"` in release manifest
+- [ ] `android:debuggable="false"` in release manifest (set in both `DeepFlowMobile/android/app/build.gradle` and `android/app/build.gradle` release blocks)
+- [ ] `android:allowBackup="false"` in both AndroidManifest.xml files
 - [ ] Signed AAB generated with release keystore
 - [ ] APK scanned for plaintext keys: `strings app-release.apk | grep -E 'eyJ|pk_'`
+- [ ] Firebase Crashlytics SDK added to `DeepFlowMobile/android/app/build.gradle` dependencies
+
+### Rule: debuggable flag
+`debuggable false` must be explicitly set in the `release` build type of every `build.gradle` (both React Native and Capacitor). The manifest-level attribute is deprecated. This prevents debug tools from attaching to production APKs.
+
+### Rule: allowBackup
+`android:allowBackup="false"` must be set in every `AndroidManifest.xml`. Prevents users from backing up app data via ADB, which could expose auth tokens on rooted devices.
 
 ## Gate 5: GDPR Compliance
 - [ ] `deleteAccount()` removes: profiles, writing_sessions, graveyard, drafts, auth.users

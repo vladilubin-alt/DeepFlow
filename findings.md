@@ -34,3 +34,32 @@
 - **Trigger**: "Vault ◆" button in Header opens modal.
 - **Recovery**: "Recover Last Draft" button restores most recent graveyard content to `WritingArena`.
 - **Constraint**: Entries auto-purged after 30 days per `graveyard` table lifecycle.
+
+---
+
+## v1.0 Launch KPI Targets
+
+| Metric | Target | Source |
+|--------|--------|--------|
+| Crash-free users | > 99% | Firebase Crashlytics |
+| Trial → paid conversion | > 5% | RevenueCat |
+| DAU (month 1) | > 100 | Mixpanel |
+| Avg session duration | > 15 min | Supabase analytics |
+| Session abandonment | < 30% | Mixpanel funnel |
+| API error rate | < 0.1% | Supabase Dashboard |
+| Store rating | > 4.0 | Play Console |
+| GDPR request response | < 30 days | Support email |
+| Auth failure rate | < 2% | Supabase Auth logs |
+
+## Security Posture (v1.0)
+
+| Control | Status | Evidence |
+|---------|--------|----------|
+| RLS enabled (all 4 tables) | ✅ Applied | `supabase/migrations/001_enable_rls.sql` |
+| RLS policies (auth.uid()) | ✅ Applied | 16 policies: select/insert/update/delete per table |
+| `android:debuggable="false"` | ✅ Enforced | `DeepFlowMobile/android/app/build.gradle:128` + `android/app/build.gradle:20` |
+| `android:allowBackup="false"` | ✅ Enforced | Both AndroidManifest.xml files |
+| Encrypted token storage | ✅ Implemented | `react-native-encrypted-storage` (Keystore/Keychain) |
+| Privacy policy accessible | ✅ Without auth | `src/components/PrivacyPolicy.jsx` at route `/privacy` |
+| Firebase Crashlytics SDK | ✅ Added | `DeepFlowMobile/android/app/build.gradle:137-138` |
+| CSP / security headers | ✅ Config in `netlify.toml` | Push to `main` to deploy |

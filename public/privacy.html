@@ -1,151 +1,232 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DeepFlow — Privacy Policy</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — DeepFlow</title>
+  <meta name="description" content="DeepFlow Privacy Policy — how we collect, use, and protect your personal data." />
+  <meta property="og:title" content="Privacy Policy — DeepFlow" />
+  <meta property="og:description" content="ADHD writing instrument privacy policy. GDPR and CCPA compliant." />
+  <meta property="og:type" content="website" />
+  <meta name="robots" content="index, follow" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #0a0a0a; color: #ccc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.75; }
+    body {
+      min-height: 100vh;
+      background-color: #0a0a0a;
+      color: #ccc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+    .header {
+      position: sticky;
+      top: 0;
+      background-color: #0a0a0aee;
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #1f1f1f;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 50;
+    }
+    .logo { color: #EF9F27; font-weight: 700; font-size: 18px; letter-spacing: -0.3px; text-decoration: none; }
+    .back-link {
+      color: #888;
+      font-size: 13px;
+      text-decoration: none;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 6px 14px;
+    }
+    .back-link:hover { border-color: #555; color: #aaa; }
     .container { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
-    h1 { color: #EF9F27; font-size: 32px; font-weight: 700; margin-bottom: 8px; }
-    .date { color: #666; font-size: 13px; margin-bottom: 40px; font-family: monospace; }
+    h1 { color: #EF9F27; font-size: 32px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
+    .meta { color: #666; font-size: 13px; margin-bottom: 40px; font-family: monospace; }
     h2 { color: #e5e5e5; font-size: 18px; font-weight: 600; margin-bottom: 16px; border-bottom: 1px solid #1f1f1f; padding-bottom: 8px; }
-    h3 { color: #ccc; font-size: 14px; font-weight: 600; margin-bottom: 8px; margin-top: 20px; }
-    p, li { color: #aaa; font-size: 14px; margin-bottom: 8px; }
-    ul { padding-left: 20px; }
-    strong { color: #e5e5e5; }
-    a { color: #EF9F27; text-decoration: none; }
+    h3 { color: #ccc; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
     section { margin-bottom: 40px; }
-    table { width: 100%; border-collapse: collapse; border: 1px solid #222; font-size: 13px; margin-bottom: 16px; }
-    th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #1a1a1a; }
-    th { color: #888; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-    td { color: #aaa; }
+    .content { color: #aaa; font-size: 14px; }
+    .content p { margin-bottom: 12px; }
+    .content ul { margin-bottom: 16px; padding-left: 20px; }
+    .content li { margin-bottom: 6px; }
+    .content strong { color: #ccc; }
+    table { width: 100%; border-collapse: collapse; border: 1px solid #222; border-radius: 8px; overflow: hidden; font-size: 13px; margin: 12px 0; }
+    th { text-align: left; padding: 8px 12px; color: #888; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #222; }
+    td { padding: 8px 12px; font-size: 13px; color: #aaa; border-bottom: 1px solid #1a1a1a; vertical-align: top; }
+    a { color: #EF9F27; text-decoration: none; }
+    a:hover { text-decoration: underline; }
     .footer { border-top: 1px solid #1f1f1f; margin-top: 48px; padding-top: 24px; font-size: 12px; color: #444; }
+    @media (max-width: 600px) {
+      .container { padding: 24px 16px 60px; }
+      h1 { font-size: 24px; }
+    }
   </style>
 </head>
 <body>
+  <div class="header">
+    <a href="/" class="logo">DeepFlow</a>
+    <a href="/" class="back-link">&larr; Back to App</a>
+  </div>
+
   <div class="container">
     <h1>Privacy Policy</h1>
-    <p class="date">Effective date: July 6, 2026 · Last updated: July 6, 2026</p>
+    <p class="meta">Effective date: June 28, 2026 &middot; Last updated: June 28, 2026</p>
 
     <section>
       <h2>1. Introduction</h2>
-      <p>DeepFlow ("we", "our", or "us") is an ADHD writing instrument built to help you write without distraction. This Privacy Policy explains what personal data we collect, how we use it, and your rights under applicable law including the GDPR (EU/EEA) and the CCPA (California).</p>
-      <p>By creating an account or using the DeepFlow app or website, you agree to the practices described in this policy.</p>
+      <div class="content">
+        <p>DeepFlow ("we", "our", or "us") is an ADHD writing instrument built to help you write without distraction. This Privacy Policy explains what personal data we collect, how we use it, and your rights under applicable law including the GDPR (EU/EEA) and the CCPA (California).</p>
+        <p>By creating an account or using the DeepFlow app or website, you agree to the practices described in this policy. If you disagree, please do not use our services.</p>
+      </div>
     </section>
 
     <section>
       <h2>2. Data We Collect</h2>
-      <h3>2.1 Account Data</h3>
-      <ul>
-        <li><strong>Email address</strong> — collected at sign-up, used for authentication and transactional emails.</li>
-        <li><strong>Password</strong> — stored as a salted bcrypt hash by Supabase Auth. We never see your plaintext password.</li>
-        <li><strong>User ID</strong> — a randomly generated UUID assigned to your account.</li>
-      </ul>
-      <h3>2.2 Writing &amp; Session Data</h3>
-      <ul>
-        <li><strong>Writing sessions</strong> — session metadata (start time, duration, word count, timer preset, FLARE type). We do <em>not</em> store the actual text you write unless you explicitly save it to the Vault.</li>
-        <li><strong>Vault entries</strong> — deleted writing fragments you choose to save ("graveyard"). These are end-to-end owned by your account and subject to Row-Level Security.</li>
-        <li><strong>Focus scores</strong> — computed metrics about your session productivity.</li>
-        <li><strong>Streak data</strong> — consecutive days of writing activity.</li>
-      </ul>
-      <h3>2.3 Device &amp; Technical Data</h3>
-      <ul>
-        <li><strong>Device type / OS version</strong> — collected by RevenueCat and Mixpanel for analytics and subscription management.</li>
-        <li><strong>App version</strong> — used for crash reporting and compatibility checks.</li>
-        <li><strong>Push notification token</strong> — stored only if you enable reminders (Android only).</li>
-      </ul>
-      <h3>2.4 Usage Analytics</h3>
-      <p>We collect anonymised event data (e.g. "Session Started", "Grace Token Used") via Mixpanel to understand how features are used. Events contain a hashed user ID and session metadata but <strong>never</strong> the content of your writing.</p>
-      <p>Analytics are opt-in only. On first launch, you will be asked to accept or reject analytics tracking. If rejected, no events are sent. You can change this preference at any time in Settings.</p>
+      <div class="content">
+        <h3>2.1 Account Data</h3>
+        <ul>
+          <li><strong>Email address</strong> &mdash; collected at sign-up, used for authentication and transactional emails.</li>
+          <li><strong>Password</strong> &mdash; stored as a salted bcrypt hash by Supabase Auth. We never see your plaintext password.</li>
+          <li><strong>User ID</strong> &mdash; a randomly generated UUID assigned to your account.</li>
+        </ul>
+        <h3>2.2 Writing &amp; Session Data</h3>
+        <ul>
+          <li><strong>Writing sessions</strong> &mdash; session metadata (start time, duration, word count, timer preset, FLARE type). We do <em>not</em> store the actual text you write unless you explicitly save it to the Vault.</li>
+          <li><strong>Vault entries</strong> &mdash; deleted writing fragments you choose to save ("graveyard"). These are end-to-end owned by your account and subject to RLS (Row-Level Security).</li>
+          <li><strong>Focus scores</strong> &mdash; computed metrics about your session productivity.</li>
+          <li><strong>Streak data</strong> &mdash; consecutive days of writing activity.</li>
+        </ul>
+        <h3>2.3 Device &amp; Technical Data</h3>
+        <ul>
+          <li><strong>IP address</strong> &mdash; logged transiently by our infrastructure; not stored long-term.</li>
+          <li><strong>Device type / OS version</strong> &mdash; collected by RevenueCat and Mixpanel for analytics and subscription management (see &sect;4).</li>
+          <li><strong>App version</strong> &mdash; used for crash reporting and compatibility checks.</li>
+          <li><strong>Push notification token</strong> &mdash; stored only if you enable reminders (Android only).</li>
+        </ul>
+        <h3>2.4 Usage Analytics</h3>
+        <p>We collect anonymised event data (e.g. "Session Started", "Grace Token Used") via Mixpanel to understand how features are used. Events contain your user ID and session metadata but <strong>never</strong> the content of your writing.</p>
+      </div>
     </section>
 
     <section>
       <h2>3. How We Use Your Data</h2>
-      <table>
-        <thead><tr><th>Purpose</th><th>Legal Basis (GDPR)</th></tr></thead>
-        <tbody>
-          <tr><td>Authenticate you and secure your account</td><td>Contract performance</td></tr>
-          <tr><td>Save and sync your writing sessions across devices</td><td>Contract performance</td></tr>
-          <tr><td>Send transactional emails (email confirmation, password reset)</td><td>Contract performance</td></tr>
-          <tr><td>Analyse feature usage to improve the product</td><td>Legitimate interests</td></tr>
-          <tr><td>Process subscription payments via RevenueCat</td><td>Contract performance</td></tr>
-          <tr><td>Comply with legal obligations (e.g. tax records)</td><td>Legal obligation</td></tr>
-        </tbody>
-      </table>
+      <div class="content">
+        <table>
+          <thead>
+            <tr>
+              <th>Purpose</th>
+              <th>Legal Basis (GDPR)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Authenticate you and secure your account</td><td>Contract performance</td></tr>
+            <tr><td>Save and sync your writing sessions across devices</td><td>Contract performance</td></tr>
+            <tr><td>Send transactional emails (e.g. email confirmation, password reset)</td><td>Contract performance</td></tr>
+            <tr><td>Analyse feature usage to improve the product</td><td>Legitimate interests</td></tr>
+            <tr><td>Process subscription payments via RevenueCat</td><td>Contract performance</td></tr>
+            <tr><td>Comply with legal obligations (e.g. tax records)</td><td>Legal obligation</td></tr>
+          </tbody>
+        </table>
+      </div>
     </section>
 
     <section>
       <h2>4. Third-Party Processors</h2>
-      <table>
-        <thead><tr><th>Processor</th><th>Purpose</th><th>Data Transferred</th><th>Location</th></tr></thead>
-        <tbody>
-          <tr><td>Supabase</td><td>Database, Auth, Storage</td><td>All account &amp; session data</td><td>US (AWS)</td></tr>
-          <tr><td>RevenueCat</td><td>Subscription management</td><td>User ID, device info, purchases</td><td>US</td></tr>
-          <tr><td>Superwall</td><td>Paywall &amp; monetisation</td><td>User ID, device info</td><td>US</td></tr>
-          <tr><td>Mixpanel</td><td>Product analytics</td><td>User ID, anonymised events</td><td>US</td></tr>
-          <tr><td>Netlify</td><td>Web hosting</td><td>IP addresses (logs)</td><td>US</td></tr>
-        </tbody>
-      </table>
-      <p>For EU/EEA users, data transfers to the US are covered by Standard Contractual Clauses (SCCs).</p>
+      <div class="content">
+        <p>We engage the following sub-processors. Each is bound by a Data Processing Agreement:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Processor</th>
+              <th>Purpose</th>
+              <th>Data Transferred</th>
+              <th>Location</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Supabase</td><td>Database, Auth, Storage</td><td>All account &amp; session data</td><td>US (AWS us-east-1)</td></tr>
+            <tr><td>RevenueCat</td><td>Subscription management</td><td>User ID, device info, purchase events</td><td>US</td></tr>
+            <tr><td>Superwall</td><td>Paywall &amp; monetisation</td><td>User ID, device info</td><td>US</td></tr>
+            <tr><td>Mixpanel</td><td>Product analytics</td><td>User ID, anonymised events</td><td>US</td></tr>
+            <tr><td>Netlify</td><td>Web hosting</td><td>IP addresses (logs)</td><td>US</td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top: 16px; font-size: 13px; color: #666;">For EU/EEA users, data transfers to the US are covered by Standard Contractual Clauses (SCCs).</p>
+      </div>
     </section>
 
     <section>
       <h2>5. Data Retention</h2>
-      <ul>
-        <li><strong>Account data</strong> — retained until you delete your account.</li>
-        <li><strong>Writing sessions &amp; Vault</strong> — retained until you delete your account or manually delete individual entries.</li>
-        <li><strong>Analytics events</strong> — retained for 24 months in Mixpanel, then automatically purged.</li>
-        <li><strong>Server logs</strong> — retained for up to 30 days by Netlify and Supabase.</li>
-      </ul>
+      <div class="content">
+        <ul>
+          <li><strong>Account data</strong> &mdash; retained until you delete your account.</li>
+          <li><strong>Writing sessions &amp; Vault</strong> &mdash; retained until you delete your account or manually delete individual entries.</li>
+          <li><strong>Analytics events</strong> &mdash; retained for 24 months in Mixpanel, then automatically purged.</li>
+          <li><strong>Server logs</strong> &mdash; retained for up to 30 days by Netlify and Supabase.</li>
+        </ul>
+      </div>
     </section>
 
     <section>
       <h2>6. Your Rights</h2>
-      <p>Depending on your location, you may have the following rights:</p>
-      <ul>
-        <li><strong>Access</strong> — request a copy of your personal data.</li>
-        <li><strong>Rectification</strong> — correct inaccurate data.</li>
-        <li><strong>Erasure</strong> — request deletion of your account and all associated data.</li>
-        <li><strong>Portability</strong> — receive your data in a machine-readable format.</li>
-        <li><strong>Restriction</strong> — ask us to pause processing while a dispute is resolved.</li>
-        <li><strong>Objection</strong> — object to processing based on legitimate interests.</li>
-        <li><strong>Opt-out of sale (CCPA)</strong> — we do <em>not</em> sell personal information.</li>
-      </ul>
-      <p>To exercise any right, email <a href="mailto:privacy@deepflow.app">privacy@deepflow.app</a>. We will respond within 30 days.</p>
+      <div class="content">
+        <p>Depending on your location, you may have the following rights:</p>
+        <ul>
+          <li><strong>Access</strong> &mdash; request a copy of your personal data.</li>
+          <li><strong>Rectification</strong> &mdash; correct inaccurate data.</li>
+          <li><strong>Erasure</strong> &mdash; request deletion of your account and all associated data.</li>
+          <li><strong>Portability</strong> &mdash; receive your data in a machine-readable format.</li>
+          <li><strong>Restriction</strong> &mdash; ask us to pause processing while a dispute is resolved.</li>
+          <li><strong>Objection</strong> &mdash; object to processing based on legitimate interests.</li>
+          <li><strong>Opt-out of sale (CCPA)</strong> &mdash; we do <em>not</em> sell personal information.</li>
+        </ul>
+        <p>To exercise any right, email <a href="mailto:privacy@deepflow.app">privacy@deepflow.app</a>. We will respond within 30 days (or 45 days for complex requests).</p>
+      </div>
     </section>
 
     <section>
       <h2>7. Data Security</h2>
-      <ul>
-        <li>All data in transit is encrypted via TLS 1.2+.</li>
-        <li>Data at rest is encrypted via AES-256 (Supabase / AWS).</li>
-        <li>Row-Level Security (RLS) is enforced in Supabase — each user can only access their own data.</li>
-        <li>Auth tokens on mobile devices are stored in Android Keystore / iOS Keychain (encrypted at rest).</li>
-        <li>Passwords are hashed with bcrypt by Supabase Auth.</li>
-      </ul>
+      <div class="content">
+        <ul>
+          <li>All data in transit is encrypted via TLS 1.2+.</li>
+          <li>Data at rest is encrypted via AES-256 (Supabase / AWS).</li>
+          <li>Row-Level Security (RLS) is enforced in Supabase &mdash; each user can only access their own data.</li>
+          <li>Auth tokens on mobile devices are stored in Android Keystore / iOS Keychain (encrypted at rest).</li>
+          <li>Passwords are hashed with bcrypt by Supabase Auth.</li>
+        </ul>
+        <p>Despite our efforts, no system is completely secure. If you discover a vulnerability, please disclose it responsibly to <a href="mailto:privacy@deepflow.app">privacy@deepflow.app</a>.</p>
+      </div>
     </section>
 
     <section>
       <h2>8. Children's Privacy</h2>
-      <p>DeepFlow is not directed at children under 13 (or 16 in the EU). We do not knowingly collect personal data from children.</p>
+      <div class="content">
+        <p>DeepFlow is not directed at children under 13 (or 16 in the EU). We do not knowingly collect personal data from children. If you believe a child has created an account, contact us immediately and we will delete it.</p>
+      </div>
     </section>
 
     <section>
       <h2>9. Changes to This Policy</h2>
-      <p>We may update this policy from time to time. We will notify registered users via email at least 14 days before any material changes take effect.</p>
+      <div class="content">
+        <p>We may update this policy from time to time. We will notify registered users via email at least 14 days before any material changes take effect. The effective date at the top of this page will always reflect the latest version.</p>
+      </div>
     </section>
 
     <section>
       <h2>10. Contact</h2>
-      <p>For privacy questions, requests, or complaints:<br>
-      <strong>Email:</strong> <a href="mailto:privacy@deepflow.app">privacy@deepflow.app</a><br>
-      <strong>App:</strong> DeepFlow ADHD Writing Instrument</p>
+      <div class="content">
+        <p>For privacy questions, requests, or complaints:<br />
+        <strong>Email:</strong> <a href="mailto:privacy@deepflow.app">privacy@deepflow.app</a><br />
+        <strong>App:</strong> DeepFlow ADHD Writing Instrument</p>
+        <p>If you are in the EU/EEA and are unsatisfied with our response, you have the right to lodge a complaint with your local Data Protection Authority.</p>
+      </div>
     </section>
 
     <div class="footer">
-      © 2026 DeepFlow. All rights reserved.
+      &copy; 2026 DeepFlow. All rights reserved.
+      &middot;
+      <a href="/">Back to app</a>
     </div>
   </div>
 </body>

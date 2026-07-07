@@ -2,6 +2,7 @@ apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 apply plugin: "com.google.gms.google-services"
+apply plugin: "com.google.firebase.crashlytics"
 apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
 
 /**
@@ -113,9 +114,9 @@ android {
         }
         release {
             storeFile file('release.keystore')
-            storePassword project.hasProperty('KEYSTORE_PASSWORD') ? KEYSTORE_PASSWORD : System.getenv('DF_STORE_PASSWORD') ?: 't6GYNFpNb5vB3XqJcdq8'
+            storePassword project.hasProperty('KEYSTORE_PASSWORD') ? KEYSTORE_PASSWORD : System.getenv('DF_STORE_PASSWORD')
             keyAlias 'deepflow'
-            keyPassword project.hasProperty('KEY_PASSWORD') ? KEY_PASSWORD : System.getenv('DF_KEY_PASSWORD') ?: 't6GYNFpNb5vB3XqJcdq8'
+            keyPassword project.hasProperty('KEY_PASSWORD') ? KEY_PASSWORD : System.getenv('DF_KEY_PASSWORD')
         }
     }
     buildTypes {
@@ -142,6 +143,9 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    // Firebase Crashlytics (S-15)
+    implementation("com.google.firebase:firebase-crashlytics:19.4.0")
 
     testImplementation "junit:junit:4.13.2"
     androidTestImplementation "androidx.test.ext:junit:1.3.0"

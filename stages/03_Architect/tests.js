@@ -234,7 +234,7 @@ suite('Sync Service — Local Draft Persistence');
     storage,
   });
 
-  sync.saveDraftLocally('session-123', 'Hello world', 2);
+  sync.saveDraftLocally('session-123', null, 'Hello world', 2);
 
   const draft = sync.getLocalDraft('session-123');
   assert(draft !== null, 'Draft saved locally');
@@ -273,8 +273,8 @@ suite('Sync Service — Multiple Drafts');
   const storage = new MemoryStorage();
   const sync = new SyncService({ storage });
 
-  sync.saveDraftLocally('s1', 'Draft one', 2);
-  sync.saveDraftLocally('s2', 'Draft two more words', 4);
+  sync.saveDraftLocally('s1', null, 'Draft one', 2);
+  sync.saveDraftLocally('s2', null, 'Draft two more words', 4);
 
   const d1 = sync.getLocalDraft('s1');
   const d2 = sync.getLocalDraft('s2');
