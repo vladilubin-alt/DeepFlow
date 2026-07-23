@@ -15,7 +15,7 @@ if [ -z "${SUPABASE_ACCESS_TOKEN:-}" ]; then
   exit 1
 fi
 
-PROJECT_REF="rkpjropcdqprsnebjwqu"
+PROJECT_REF="cmqvyikiotltnmsiyhzv"
 SQL_FILE="$PROJECT_ROOT/supabase/migrations/001_enable_rls.sql"
 
 if [ ! -f "$SQL_FILE" ]; then
