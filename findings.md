@@ -51,6 +51,25 @@
 | GDPR request response | < 30 days | Support email |
 | Auth failure rate | < 2% | Supabase Auth logs |
 
+## Day 1-7 Telemetry Targets (v1.0 Launch)
+
+| Metric | Target | Tool | Checkpoint |
+|--------|--------|------|------------|
+| Android Crash Rate | < 1% | Firebase Crashlytics | Day 1 steady-state |
+| RevenueCat Trial Conversion | > 5% | RevenueCat Dashboard | Day 7 (trial ends) |
+| Session Abandonment | < 30% | Mixpanel funnel | Day 3, Day 7 |
+| API Error Rate (4xx/5xx) | < 0.1% | Supabase Dashboard | Daily |
+| ANR Rate | < 0.05% | Google Play Console | Day 7 |
+| Auth Failure Rate | < 2% | Supabase Auth logs | Daily |
+| Cold Start Time | < 2.5s | Firebase Vitals | Day 3 |
+
+### Moment of Delight Hook — Verified
+
+| Trigger | Platform | Mechanism | Status |
+|---------|----------|-----------|--------|
+| First successful payment | Mobile (RN) | `SuperwallService.js:70` — `addCustomerInfoUpdateListener` detects entitlements → `canShowReviewPrompt()` → `FirstPurchaseReviewModal` with confetti burst | ✅ Wired |
+| Focus Score >= 80 | Web SPA | `FocusReportModal.jsx:106` — `{focusScore >= 80 && <Confetti />}` renders confetti animation in session report | ✅ Wired |
+
 ## Security Posture (v1.0)
 
 | Control | Status | Evidence |
